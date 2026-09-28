@@ -5,7 +5,7 @@ import { BRAND_NAME } from '../brand';
 import { siteUrl } from '../site-url';
 import { callTelegram } from './api';
 
-// Messages from the bot to an artist when staff approve their seller
+// Messages from the bot to an artist when staff approve or reject their seller
 // application or an artwork. Everyone who signed in did so through the bot, so
 // it may write to them. Best effort: a person who blocked the bot, or Telegram
 // being down, must never break the moderation, so failures are only logged.
@@ -54,5 +54,40 @@ export async function notifyArtworkApproved(db: Db, artworkId: string) {
     artwork.sellerId,
     `✅ Картина «${artwork.title}» прошла проверку и опубликована в каталоге ${BRAND_NAME}.`,
     { text: 'Посмотреть картину', path: `/gallery/artwork/${artworkId}` },
+  );
+}
+
+// The staff's reason, when they gave one, as its own paragraph.
+const reasonLine = (reason: string | null) => (reason?.trim() ? `\n\nПричина: ${reason.trim()}` : '');
+
+export async function notifySellerRejected(db: Db, applicationId: string) {
+  const [application] = await db
+    .select({ userId: sellerApplications.userId, rejectionReason: sellerApplications.rejectionReason })
+    .from(sellerApplications)
+    .where(eq(sellerApplications.id, applicationId));
+  if (!application) return;
+  await sendToUser(
+    db,
+    application.userId,
+    `К сожалению, ваша заявка продавца на ${BRAND_NAME} отклонена.` +
+      reasonLine(application.rejectionReason) +
+      '\n\nВы можете исправить её и отправить заново.',
+    { text: 'Отправить заявку заново', path: '/become-seller' },
+  );
+}
+
+export async function notifyArtworkRejected(db: Db, artworkId: string) {
+  const [artwork] = await db
+    .select({ sellerId: artworks.sellerId, title: artworks.title, rejectionReason: artworks.rejectionReason })
+    .from(artworks)
+    .where(eq(artworks.id, artworkId));
+  if (!artwork) return;
+  await sendToUser(
+    db,
+    artwork.sellerId,
+    `Картина «${artwork.title}» не прошла проверку.` +
+      reasonLine(artwork.rejectionReason) +
+      '\n\nИсправьте её в кабинете — после сохранения она снова уйдёт на проверку.',
+    { text: 'Исправить картину', path: `/dashboard/seller/${artworkId}/edit` },
   );
 }

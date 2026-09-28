@@ -4,7 +4,9 @@ import type { Db } from '../../src/db';
 const callTelegram = vi.fn();
 vi.mock('../../src/lib/telegram-bot/api', () => ({ callTelegram: (...args: unknown[]) => callTelegram(...args) }));
 
-const { notifyArtworkApproved, notifySellerApproved } = await import('../../src/lib/telegram-bot/notify');
+const { notifyArtworkApproved, notifyArtworkRejected, notifySellerApproved, notifySellerRejected } = await import(
+  '../../src/lib/telegram-bot/notify'
+);
 
 // A stand-in for drizzle: each select().from().where() answers with the next
 // prepared rows, in order.
@@ -56,6 +58,34 @@ describe('telegram approval messages', () => {
     ).resolves.toBeUndefined();
     expect(log).toHaveBeenCalled();
     log.mockRestore();
+  });
+
+  it('tells the artist their application is rejected, with the reason and a way back', async () => {
+    const db = fakeDb([{ userId: 'u1', rejectionReason: 'Нужны фото работ' }], [{ telegramId: 42 }]);
+    await notifySellerRejected(db, 'app1');
+    const body = callTelegram.mock.calls[0][1];
+    expect(body.chat_id).toBe(42);
+    expect(body.text).toContain('заявка продавца на sanatplace отклонена');
+    expect(body.text).toContain('Причина: Нужны фото работ');
+    expect(body.reply_markup.inline_keyboard[0][0]).toEqual({
+      text: 'Отправить заявку заново',
+      url: 'https://sanatplace.example/become-seller',
+    });
+  });
+
+  it('tells the artist their artwork is rejected, with a link to fix it', async () => {
+    const db = fakeDb([{ sellerId: 'u1', title: 'Закат', rejectionReason: 'Размытое фото' }], [{ telegramId: 42 }]);
+    await notifyArtworkRejected(db, 'art1');
+    const body = callTelegram.mock.calls[0][1];
+    expect(body.text).toContain('«Закат» не прошла проверку');
+    expect(body.text).toContain('Причина: Размытое фото');
+    expect(body.reply_markup.inline_keyboard[0][0].url).toBe('https://sanatplace.example/dashboard/seller/art1/edit');
+  });
+
+  it('leaves the reason out when staff gave none', async () => {
+    await notifyArtworkRejected(fakeDb([{ sellerId: 'u1', title: 'T', rejectionReason: '  ' }], [{ telegramId: 42 }]), 'a');
+    await notifySellerRejected(fakeDb([{ userId: 'u1', rejectionReason: null }], [{ telegramId: 42 }]), 'b');
+    for (const [, body] of callTelegram.mock.calls) expect(body.text).not.toContain('Причина');
   });
 
   it('sends nothing for an unknown application or artwork', async () => {

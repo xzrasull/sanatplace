@@ -8,7 +8,7 @@ import { getDb } from '@/src/db';
 import { approveOrRejectArtwork, deleteArtwork } from '@/src/lib/artworks/admin-operations';
 import { isUuid } from '@/src/lib/gallery/types';
 import { dropArtworkImages } from '@/src/lib/uploads/upload-image';
-import { notifyArtworkApproved } from '@/src/lib/telegram-bot/notify';
+import { notifyArtworkApproved, notifyArtworkRejected } from '@/src/lib/telegram-bot/notify';
 
 export async function approveArtwork(formData: FormData) {
   await requireStaff();
@@ -30,6 +30,7 @@ export async function rejectArtwork(formData: FormData) {
     decision: 'reject',
     reason: String(formData.get('reason') || ''),
   });
+  after(() => notifyArtworkRejected(getDb(), artworkId));
   revalidatePath('/admin/artworks');
 }
 
