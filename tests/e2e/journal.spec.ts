@@ -32,6 +32,14 @@ test('the admin writes an event as a draft, publishes it, and it shows on the si
     await page.getByRole('button', { name: 'Сохранить черновик' }).click();
     await expect(page.getByText('Черновик сохранён.')).toBeVisible({ timeout: 20000 });
 
+    // the filters apply as soon as a choice is made
+    await page.getByLabel('Статус').selectOption('draft');
+    await expect(page).toHaveURL(/[?&]s=draft/);
+    await page.getByLabel('Рубрика').selectOption('event');
+    await expect(page).toHaveURL(/[?&]c=event/);
+    await expect(page.getByRole('heading', { name: title })).toBeVisible();
+    await page.goto('/admin/journal');
+
     // a draft is not on the site, not even by its address (the status stays
     // 200 because the page streams, as for a missing artwork; the content is the 404)
     const draft = await (await page.request.get(`/journal/${slug}`)).text();

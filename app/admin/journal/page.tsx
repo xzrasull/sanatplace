@@ -5,6 +5,7 @@ import { CATEGORY_NAME, CATEGORY_TABS, dateRange, isDated, isPostCategory, POST_
 import { listAllPosts, type Post } from '@/src/lib/journal/posts';
 import { AdminNav } from '@/src/components/admin/admin-nav';
 import { ConfirmDelete } from '@/src/components/admin/confirm-delete';
+import { FilterForm } from '@/src/components/admin/filter-form';
 import { NativeSelect } from '@/src/components/form/native-select';
 import { SubmitButton } from '@/src/components/form/submit-button';
 import { Input } from '@/src/components/ui/input';
@@ -61,7 +62,7 @@ export default async function AdminJournalPage({
         </p>
       )}
 
-      <form className="mt-6 flex flex-wrap items-end gap-3" role="search" aria-label="Фильтр материалов">
+      <FilterForm className="mt-6 flex flex-wrap items-end gap-3" role="search" aria-label="Фильтр материалов">
         <label className="grid gap-1.5 text-sm font-medium">
           <span>Рубрика</span>
           <NativeSelect name="c" defaultValue={category ?? ''}>
@@ -84,8 +85,8 @@ export default async function AdminJournalPage({
           <span>Поиск по названию</span>
           <Input type="search" name="q" defaultValue={q} />
         </label>
-        <SubmitButton variant="outline">Показать</SubmitButton>
-      </form>
+        <SubmitButton variant="outline">Найти</SubmitButton>
+      </FilterForm>
 
       {list.length === 0 ? (
         <p className="mt-8 text-muted-foreground">{category || status || q ? 'Ничего не найдено.' : 'Материалов пока нет.'}</p>
