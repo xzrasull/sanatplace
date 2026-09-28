@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { WishCount } from '@/src/components/sanat/wish-count';
 import { startNavProgress } from '@/src/components/sanat/instant-feedback';
+import { SignOutButton } from '@/src/components/sanat/sign-out-button';
 import { prefersReducedMotion } from '@/src/lib/sanat/reveal';
 
 type Item = { href: string; label: string; current: (path: string) => boolean; wish?: boolean };
@@ -159,11 +160,7 @@ export function BurgerMenu({ signedIn, wishCount }: { signedIn: boolean; wishCou
                 <Link className="btn alt" href="/cabinet">
                   Профиль
                 </Link>
-                <form action="/auth/sign-out" method="post">
-                  <button type="submit" className="btn alt">
-                    Выйти
-                  </button>
-                </form>
+                <SignOutButton action="/auth/sign-out" className="btn alt" />
               </div>
             ) : (
               <Link className="btn btn-tg" href="/sign-in">
