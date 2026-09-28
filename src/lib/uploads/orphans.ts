@@ -1,4 +1,4 @@
-import { ARTWORK_IMAGES_BUCKET, AVATARS_BUCKET, BANNERS_BUCKET } from './buckets';
+import { ARTWORK_IMAGES_BUCKET, AVATARS_BUCKET, BANNERS_BUCKET, POSTS_BUCKET } from './buckets';
 
 // Finding stored images nothing points at any more (left behind by replaced
 // photos, failed saves or deleted rows), so they can be removed.
@@ -36,6 +36,7 @@ export const IMAGE_COLUMNS: Record<string, { bucket: string; columns: string[] }
   artworks: { bucket: ARTWORK_IMAGES_BUCKET, columns: ['imageUrl'] },
   banners: { bucket: BANNERS_BUCKET, columns: ['imageUrl', 'imageMobileUrl'] },
   seller_applications: { bucket: AVATARS_BUCKET, columns: ['avatarUrl'] },
+  posts: { bucket: POSTS_BUCKET, columns: ['coverUrl'] },
 };
 
 export function imageUrlsOf(table: string, rows: Record<string, unknown>[]): string[] {

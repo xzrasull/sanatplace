@@ -1,4 +1,5 @@
-import { pgTable, uuid, text, timestamp, integer, bigint, boolean, pgEnum, primaryKey, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, integer, bigint, boolean, date, pgEnum, primaryKey, index } from 'drizzle-orm/pg-core';
+import { POST_CATEGORIES } from '../lib/journal/categories';
 
 export const roleEnum = pgEnum('role', ['buyer', 'seller', 'admin']);
 export const applicationStatusEnum = pgEnum('application_status', [
@@ -146,3 +147,40 @@ export const banners = pgTable('banners', {
   endsAt: timestamp('ends_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// «Афиша и журнал»: exhibitions, events, news and articles, written by the
+// admin. The public sees only published ones (status 'published' and
+// published_at in the past); drafts stay in the admin.
+
+export const posts = pgTable(
+  'posts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    slug: text('slug').notNull().unique(),
+    category: text('category', { enum: POST_CATEGORIES }).notNull(),
+    title: text('title').notNull(),
+    excerpt: text('excerpt'),
+    // Markdown
+    body: text('body'),
+    coverUrl: text('cover_url').notNull(),
+    // exhibitions and events only (Dushanbe dates); a one-day event has no end
+    startsOn: date('starts_on'),
+    endsOn: date('ends_on'),
+    timeText: text('time_text'),
+    place: text('place'),
+    priceText: text('price_text'),
+    signupUrl: text('signup_url'),
+    artistId: uuid('artist_id').references(() => users.id, { onDelete: 'set null' }),
+    isFeatured: boolean('is_featured').notNull().default(false),
+    status: text('status', { enum: ['draft', 'published'] }).notNull().default('draft'),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    // admin-only: who asked for it and when
+    sourceNote: text('source_note'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('posts_status_published_idx').on(t.status, t.publishedAt),
+    index('posts_starts_on_idx').on(t.startsOn),
+  ],
+);
