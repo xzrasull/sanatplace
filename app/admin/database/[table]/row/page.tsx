@@ -6,6 +6,7 @@ import { DB_TABLES, columnsOf, display, getRow, isTableName, type ColumnInfo } f
 import { AdminNav } from '@/src/components/admin/admin-nav';
 import { removeRow, saveRow } from '../../actions';
 import { SubmitButton } from '@/src/components/form/submit-button';
+import { CustomSelect } from '@/src/components/sanat/custom-select';
 
 export const metadata = { title: 'База данных', robots: { index: false, follow: false } };
 
@@ -29,20 +30,35 @@ function Field({ c, value, inserting }: { c: ColumnInfo; value: unknown; inserti
     .filter(Boolean)
     .join(' · ');
 
-  let input;
+  const label = (
+    <span className="flex flex-wrap items-baseline gap-x-3">
+      <code>{c.name}</code>
+      <span className="text-xs text-muted-foreground">{note}</span>
+    </span>
+  );
+
   if (c.kind === 'enum' || c.kind === 'boolean') {
-    const options = c.kind === 'enum' ? (c.enumValues ?? []) : ['true', 'false'];
-    input = (
-      <select name={name} defaultValue={text} className={control} required={!optional}>
-        {optional && <option value="">{inserting && c.hasDefault ? '(по умолчанию)' : 'NULL'}</option>}
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {c.kind === 'boolean' ? (o === 'true' ? 'да (true)' : 'нет (false)') : o}
-          </option>
-        ))}
-      </select>
+    const values = c.kind === 'enum' ? (c.enumValues ?? []) : ['true', 'false'];
+    return (
+      <CustomSelect
+        className="grid gap-1.5"
+        name={name}
+        label={label}
+        options={[
+          ...(optional ? [{ value: '', label: inserting && c.hasDefault ? '(по умолчанию)' : 'NULL' }] : []),
+          ...values.map((o) => ({
+            value: o,
+            label: c.kind === 'boolean' ? (o === 'true' ? 'да (true)' : 'нет (false)') : o,
+          })),
+        ]}
+        defaultValue={text}
+        required={!optional}
+      />
     );
-  } else if (c.kind === 'text') {
+  }
+
+  let input;
+  if (c.kind === 'text') {
     input = <textarea name={name} defaultValue={text} rows={text.length > 80 ? 5 : 2} className={control} />;
   } else {
     input = (
@@ -59,10 +75,7 @@ function Field({ c, value, inserting }: { c: ColumnInfo; value: unknown; inserti
   }
   return (
     <label className="grid gap-1.5">
-      <span className="flex flex-wrap items-baseline gap-x-3">
-        <code>{c.name}</code>
-        <span className="text-xs text-muted-foreground">{note}</span>
-      </span>
+      {label}
       {input}
     </label>
   );

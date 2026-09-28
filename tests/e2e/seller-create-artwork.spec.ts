@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import sharp from 'sharp';
 import { signInAsNewUser } from './helpers/auth';
+import { pick } from './helpers/select';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../../src/db';
 import { users, sellerApplications, categories, techniques, artworks } from '../../src/db/schema';
@@ -40,8 +41,8 @@ async function fillArtwork(page: Page, title: string, category: string, techniqu
   await page.getByLabel('Цена (сомони)').fill('750');
   await page.getByLabel('Высота (см)').fill('40');
   await page.getByLabel('Ширина (см)').fill('30');
-  await page.getByLabel('Категория').selectOption({ label: category });
-  await page.getByLabel('Техника').selectOption({ label: technique });
+  await pick(page, 'Категория', category);
+  await pick(page, 'Техника', technique);
   await page.getByLabel('Фото').setInputFiles(photo);
 }
 

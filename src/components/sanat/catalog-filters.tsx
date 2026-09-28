@@ -160,6 +160,7 @@ export function CatalogFilters({
             </div>
           </fieldset>
           <CustomSelect
+            className="field"
             name="techniqueId"
             label="Техника"
             options={[{ value: '', label: 'Все техники' }, ...options.techniques.map((t) => ({ value: t.id, label: t.name }))]}
@@ -167,13 +168,14 @@ export function CatalogFilters({
             {...selectProps('techniqueId')}
           />
           <CustomSelect
+            className="field"
             name="artistId"
             label="Художник"
             options={[{ value: '', label: 'Все художники' }, ...options.artists.map((a) => ({ value: a.id, label: a.name }))]}
             defaultValue={values.artistId ?? ''}
             {...selectProps('artistId')}
           />
-          <CustomSelect name="sort" label="Сортировка" options={SORTS} defaultValue={values.sort ?? 'new'} {...selectProps('sort')} />
+          <CustomSelect className="field" name="sort" label="Сортировка" options={SORTS} defaultValue={values.sort ?? 'new'} {...selectProps('sort')} />
           <label className="field">
             <span>Цена от, TJS</span>
             <input type="number" name="minPrice" min="0" inputMode="numeric" placeholder="0" defaultValue={values.minPrice ?? ''} />

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
-import { Field } from '@/src/components/form/field';
-import { NativeSelect } from '@/src/components/form/native-select';
+import { Field, FIELD_CLASS } from '@/src/components/form/field';
+import { CustomSelect } from '@/src/components/sanat/custom-select';
 import { SlideBody } from '@/src/components/home/slide-body';
 import { Input } from '@/src/components/ui/input';
 import { BANNER_LIMITS, DEFAULT_OVERLAY, toLocalDateTime } from '@/src/lib/home/banner-form';
@@ -178,16 +178,13 @@ export function BannerForm({
           <Input name="subtitle" maxLength={BANNER_LIMITS.subtitle} defaultValue={banner?.subtitle ?? ''} />
         </Field>
 
-        <Field label="Картина (необязательно: первая кнопка откроет её)">
-          <NativeSelect name="artworkId" defaultValue={banner?.artworkId ?? ''}>
-            <option value="">Без картины</option>
-            {artworks.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.title} — {a.artist}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
+        <CustomSelect
+          className={FIELD_CLASS}
+          name="artworkId"
+          label="Картина (необязательно: первая кнопка откроет её)"
+          options={[{ value: '', label: 'Без картины' }, ...artworks.map((a) => ({ value: a.id, label: `${a.title} — ${a.artist}` }))]}
+          defaultValue={banner?.artworkId ?? ''}
+        />
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Первая кнопка: подпись">
             <Input name="buttonLabel" maxLength={BANNER_LIMITS.label} defaultValue={banner?.buttonLabel ?? ''} placeholder="Смотреть картину" />

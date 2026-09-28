@@ -1,35 +1,51 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
 export type SelectOption = { value: string; label: string };
 
+// Opening one list closes any other on the page.
+const OPEN_EVENT = 'csel:open';
+
 // A select drawn in the site's style: a pill button that opens a listbox under
-// it. The value travels in a hidden input named `name`, so the surrounding form
-// reads it like a native select. Whether the list is open is up to the parent,
-// which keeps at most one list open at a time.
+// it. The value travels in an input named `name` (invisible, but it takes part
+// in the form's validation), so the form reads it like a native select; a
+// choice sends a bubbling `input` event, as a native select does.
 //
 // Keys on the button: ↓ ↑ Enter Space open the list. In the list: ↓ ↑ move,
 // Home End jump to the first or last option, Enter Space choose, Escape closes
 // and returns focus to the button, Tab closes. A click outside closes it too.
+// The parent may own the open state (`open` + `onOpenChange`), e.g. to close
+// the lists together with a panel.
 export function CustomSelect({
   name,
   label,
   options,
   defaultValue,
-  open,
+  className,
+  labelClassName,
+  required,
+  open: openProp,
   onOpenChange,
   onChange,
 }: {
   name: string;
-  label: string;
+  label: ReactNode;
   options: SelectOption[];
-  defaultValue: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  defaultValue?: string;
+  className?: string;
+  labelClassName?: string;
+  required?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onChange?: (value: string) => void;
 }) {
-  const [value, setValue] = useState(defaultValue);
+  const [value, setValue] = useState(() =>
+    options.some((o) => o.value === defaultValue) ? defaultValue! : (options[0]?.value ?? ''),
+  );
+  const [ownOpen, setOwnOpen] = useState(false);
+  const [invalid, setInvalid] = useState(false);
+  const open = openProp ?? ownOpen;
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
@@ -39,6 +55,12 @@ export function CustomSelect({
   const buttonId = `${id}-b`;
   const listId = `${id}-o`;
 
+  const setOpen = (v: boolean) => {
+    if (v) document.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: id }));
+    if (onOpenChange) onOpenChange(v);
+    else setOwnOpen(v);
+  };
+
   const current = options.find((o) => o.value === value) ?? options[0];
   const items = () => Array.from(list.current?.querySelectorAll<HTMLLIElement>('[role="option"]') ?? []);
   const focusAt = (i: number) => {
@@ -46,34 +68,46 @@ export function CustomSelect({
     all[Math.max(0, Math.min(all.length - 1, i))]?.focus();
   };
 
-  // on opening, focus the chosen option (it scrolls into view with it)
+  // while open: focus the chosen option (it scrolls into view with it), and
+  // close on a click outside or when another list opens
   useEffect(() => {
     if (!open) return;
     const all = items();
     const i = all.findIndex((el) => el.dataset.value === value);
     all[Math.max(0, i)]?.focus();
     const onPointer = (e: PointerEvent) => {
-      if (!root.current?.contains(e.target as Node)) onOpenChange(false);
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onOther = (e: Event) => {
+      if ((e as CustomEvent<string>).detail !== id) setOpen(false);
     };
     document.addEventListener('pointerdown', onPointer);
-    return () => document.removeEventListener('pointerdown', onPointer);
+    document.addEventListener(OPEN_EVENT, onOther);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener(OPEN_EVENT, onOther);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only opening moves the focus
   }, [open]);
 
   const choose = (v: string) => {
-    onOpenChange(false);
+    setOpen(false);
     button.current?.focus();
     if (v === value) return;
-    // the form is read right away, before React re-renders the input
-    if (input.current) input.current.value = v;
     setValue(v);
+    setInvalid(false);
+    // the form may be read right away, before React re-renders the input
+    if (input.current) {
+      input.current.value = v;
+      input.current.dispatchEvent(new Event('input', { bubbles: true }));
+    }
     onChange?.(v);
   };
 
   const onButtonKey = (e: KeyboardEvent<HTMLButtonElement>) => {
     if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
       e.preventDefault();
-      onOpenChange(true);
+      setOpen(true);
     }
   };
 
@@ -104,20 +138,21 @@ export function CustomSelect({
         break;
       case 'Escape':
         e.preventDefault();
-        onOpenChange(false);
+        setOpen(false);
         button.current?.focus();
         break;
       case 'Tab':
-        onOpenChange(false);
+        setOpen(false);
         break;
     }
   };
 
   return (
-    <div className="field">
-      <span id={labelId}>{label}</span>
+    <div className={className}>
+      <span id={labelId} className={labelClassName}>
+        {label}
+      </span>
       <div className="csel" ref={root}>
-        <input ref={input} type="hidden" name={name} value={value} />
         <button
           ref={button}
           id={buttonId}
@@ -127,14 +162,26 @@ export function CustomSelect({
           aria-expanded={open}
           aria-controls={listId}
           aria-labelledby={`${labelId} ${buttonId}`}
-          onClick={() => onOpenChange(!open)}
+          data-invalid={invalid || undefined}
+          onClick={() => setOpen(!open)}
           onKeyDown={onButtonKey}
         >
-          <span className="csel-v">{current?.label}</span>
+          <span className={value === '' ? 'csel-v csel-ph' : 'csel-v'}>{current?.label}</span>
           <svg className="csel-ic" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M5 9l7 7 7-7" />
           </svg>
         </button>
+        <input
+          ref={input}
+          className="csel-in"
+          name={name}
+          value={value}
+          onChange={() => {}}
+          required={required}
+          tabIndex={-1}
+          aria-hidden="true"
+          onInvalid={() => setInvalid(true)}
+        />
         <ul
           ref={list}
           id={listId}

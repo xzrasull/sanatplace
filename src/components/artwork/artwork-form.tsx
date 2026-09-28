@@ -1,5 +1,5 @@
-import { Field } from '@/src/components/form/field';
-import { NativeSelect } from '@/src/components/form/native-select';
+import { Field, FIELD_CLASS } from '@/src/components/form/field';
+import { CustomSelect } from '@/src/components/sanat/custom-select';
 import { ArtworkImage } from '@/src/components/artwork/artwork-image';
 import { ArtworkPhotoInput } from '@/src/components/artwork/artwork-photo-input';
 import { Input } from '@/src/components/ui/input';
@@ -93,26 +93,28 @@ export function ArtworkForm({
             defaultValue={defaults?.year ?? ''}
           />
         </Field>
-        <Field label="Категория">
-          <NativeSelect name="categoryId" defaultValue={defaults?.categoryId ?? ''} required>
-            {!defaults && <option value="">Выберите категорию</option>}
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
-        <Field label="Техника">
-          <NativeSelect name="techniqueId" defaultValue={defaults?.techniqueId ?? ''} required>
-            {!defaults && <option value="">Выберите технику</option>}
-            {techniques.map((technique) => (
-              <option key={technique.id} value={technique.id}>
-                {technique.name}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
+        <CustomSelect
+          className={FIELD_CLASS}
+          name="categoryId"
+          label="Категория"
+          options={[
+            ...(defaults ? [] : [{ value: '', label: 'Выберите категорию' }]),
+            ...categories.map((c) => ({ value: c.id, label: c.name })),
+          ]}
+          defaultValue={defaults?.categoryId ?? ''}
+          required
+        />
+        <CustomSelect
+          className={FIELD_CLASS}
+          name="techniqueId"
+          label="Техника"
+          options={[
+            ...(defaults ? [] : [{ value: '', label: 'Выберите технику' }]),
+            ...techniques.map((t) => ({ value: t.id, label: t.name })),
+          ]}
+          defaultValue={defaults?.techniqueId ?? ''}
+          required
+        />
         {defaults && (
           <div>
             <p className="mb-2 text-sm text-muted-foreground">Текущее изображение</p>
