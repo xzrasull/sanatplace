@@ -1,16 +1,25 @@
+import Link from 'next/link';
 import { requireStaff } from '@/src/lib/auth/staff';
 import { getDb } from '@/src/db';
-import { listPendingArtworks } from '@/src/lib/artworks/admin-operations';
+import { listAllArtworks, listPendingArtworks } from '@/src/lib/artworks/admin-operations';
 import { AdminNav } from '@/src/components/admin/admin-nav';
+import { ConfirmDelete } from '@/src/components/admin/confirm-delete';
 import { ArtworkImage } from '@/src/components/artwork/artwork-image';
+import { StatusBadge } from '@/src/components/artwork/status-badge';
 import { Input } from '@/src/components/ui/input';
-import { approveArtwork, rejectArtwork } from './actions';
+import { approveArtwork, rejectArtwork, removeArtwork } from './actions';
 import { SubmitButton } from '@/src/components/form/submit-button';
 
-export default async function AdminArtworksPage() {
-  const role = await requireStaff();
+const ALL_LIMIT = 100;
 
-  const pending = await listPendingArtworks(getDb());
+export default async function AdminArtworksPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const role = await requireStaff();
+  const q = ((await searchParams).q ?? '').trim().slice(0, 100);
+
+  const [pending, all] = await Promise.all([
+    listPendingArtworks(getDb()),
+    role === 'admin' ? listAllArtworks(getDb(), { q, limit: ALL_LIMIT }) : Promise.resolve([]),
+  ]);
 
   return (
     <main>
@@ -48,6 +57,53 @@ export default async function AdminArtworksPage() {
           </section>
         ))}
       </div>
+
+      {role === 'admin' && (
+        <section className="mt-12" aria-labelledby="all-artworks">
+          <h2 id="all-artworks">Все картины</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Удаление убирает картину отовсюду: из каталога, со страницы художника, из избранного и коллажа на главной, а
+            её фото — из хранилища. Отменить нельзя.
+          </p>
+          <form className="mt-4 flex flex-wrap items-end gap-3" role="search" aria-label="Поиск картин">
+            <label className="grid min-w-[14rem] flex-1 gap-1.5 text-sm font-medium">
+              <span>Название или художник</span>
+              <Input type="search" name="q" defaultValue={q} />
+            </label>
+            <SubmitButton variant="outline">Найти</SubmitButton>
+          </form>
+          {all.length === 0 ? (
+            <p className="mt-4 text-muted-foreground">{q ? 'Ничего не нашлось.' : 'Картин пока нет.'}</p>
+          ) : (
+            <ul className="mt-4 grid gap-2">
+              {all.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex flex-wrap items-center gap-4 rounded-sm border border-border bg-card p-3"
+                >
+                  <ArtworkImage src={a.imageUrl} alt="" className="w-16 shrink-0" sizes="64px" />
+                  <div className="min-w-[12rem] flex-1">
+                    <p className="font-medium">{a.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {a.sellerDisplayName ?? 'Художник без профиля'} · {a.price} TJS
+                    </p>
+                  </div>
+                  <StatusBadge status={a.status} />
+                  <Link className="text-sm underline" href={`/gallery/artwork/${a.id}`} target="_blank">
+                    Открыть
+                  </Link>
+                  <ConfirmDelete action={removeArtwork} id={a.id} what={a.title} />
+                </li>
+              ))}
+            </ul>
+          )}
+          {all.length === ALL_LIMIT && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Показаны последние {ALL_LIMIT}. Уточните поиск, чтобы найти остальные.
+            </p>
+          )}
+        </section>
+      )}
     </main>
   );
 }

@@ -62,3 +62,51 @@ test('admin approves a pending artwork', async ({ page }) => {
     await getDb().delete(techniques).where(eq(techniques.id, technique.id));
   }
 });
+
+test('the admin deletes a published artwork everywhere', async ({ page }) => {
+  const [seller] = await getDb()
+    .insert(users)
+    .values({ telegramId: testTelegramId(`test_artwork_del_seller_${Date.now()}`), fullName: 'Seller', role: 'seller' })
+    .returning();
+  await getDb().insert(sellerApplications).values({
+    userId: seller.id,
+    displayName: `Худ. удаления ${Date.now()}`,
+    bio: 'Био.',
+    status: 'approved',
+  });
+  const [category] = await getDb().insert(categories).values({ name: `Категория удаления ${Date.now()}` }).returning();
+  const [technique] = await getDb().insert(techniques).values({ name: `Техника удаления ${Date.now()}` }).returning();
+  const title = `Картина для удаления ${Date.now()}`;
+  const artworkId = await createArtwork(getDb(), {
+    sellerId: seller.id,
+    title,
+    description: 'Описание.',
+    price: 500,
+    heightCm: 20,
+    widthCm: 30,
+    categoryId: category.id,
+    techniqueId: technique.id,
+    imageUrl: 'https://example.com/delete-e2e.png',
+  });
+  await getDb().update(artworks).set({ status: 'published' }).where(eq(artworks.id, artworkId));
+
+  try {
+    await signInAsStaff(page, 'admin');
+    await page.goto(`/admin/artworks?q=${encodeURIComponent(title)}`);
+    const row = page.getByRole('listitem').filter({ hasText: title });
+    await row.getByRole('button', { name: `Удалить: ${title}` }).click();
+    await row.getByRole('button', { name: `Точно удалить: ${title}` }).click();
+    await expect(page.getByText('Ничего не нашлось.')).toBeVisible();
+
+    const left = await getDb().select().from(artworks).where(eq(artworks.id, artworkId));
+    expect(left).toHaveLength(0);
+    await page.goto(`/gallery?q=${encodeURIComponent(title)}`);
+    await expect(page.getByText(title)).toHaveCount(0);
+  } finally {
+    await getDb().delete(artworks).where(eq(artworks.id, artworkId));
+    await getDb().delete(sellerApplications).where(eq(sellerApplications.userId, seller.id));
+    await getDb().delete(users).where(eq(users.id, seller.id));
+    await getDb().delete(categories).where(eq(categories.id, category.id));
+    await getDb().delete(techniques).where(eq(techniques.id, technique.id));
+  }
+});
