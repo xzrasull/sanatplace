@@ -202,7 +202,11 @@ export function PostForm({
         <Field label="Рубрика">
           <NativeSelect
             name="category"
-            value={category}
+            // Uncontrolled on purpose: the form re-renders on every `input`
+            // event (the preview), which comes before the select's `change`; a
+            // controlled value would be put back to the old rubric in between.
+            defaultValue={category}
+            onInput={(e) => setCategory(e.currentTarget.value as PostCategory)}
             onChange={(e) => setCategory(e.currentTarget.value as PostCategory)}
             required
           >

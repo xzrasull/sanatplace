@@ -19,7 +19,17 @@ test('the admin writes an event as a draft, publishes it, and it shows on the si
   await signInAsStaff(page, 'admin');
   try {
     await page.goto('/admin/journal/new');
-    await page.getByLabel('Рубрика').selectOption('event');
+    // picked with the keyboard, as a person does (separate input and change
+    // events): the choice must stick
+    const rubric = page.getByLabel('Рубрика');
+    await rubric.focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(rubric).toHaveValue('event');
+    await expect(page.getByLabel('Дата начала')).toBeVisible();
+    await page.keyboard.press('ArrowDown');
+    await expect(rubric).toHaveValue('news');
+    await expect(page.getByLabel('Дата начала')).toHaveCount(0);
+    await rubric.selectOption('event');
     await page.getByLabel('Заголовок', { exact: true }).fill(title);
     await page.getByLabel('Адрес страницы').fill(slug);
     await page.getByLabel(/Короткое описание/).fill('Три часа с кистью.');
