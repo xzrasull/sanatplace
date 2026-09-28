@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { staffSignOut } from '@/app/sanatadmin/actions';
 import type { StaffRole } from '@/src/lib/auth/staff';
-import { SubmitButton } from '@/src/components/form/submit-button';
+import { SignOutButton } from '@/src/components/sanat/sign-out-button';
 
 // Moderators: applications, artworks, categories, techniques. The admin also
 // gets the database editor, the home page banners and the journal.
@@ -28,11 +28,7 @@ export function AdminNav({ role }: { role: StaffRole }) {
         <p className="text-sm tracking-widest text-ink-2 uppercase">
           {role === 'admin' ? 'Администратор' : 'Модератор'}
         </p>
-        <form action={staffSignOut}>
-          <SubmitButton plain className={pill}>
-            Выйти
-          </SubmitButton>
-        </form>
+        <SignOutButton action={staffSignOut} className={pill} note="Чтобы вернуться, нужно будет снова ввести логин и пароль." />
       </div>
       <nav aria-label="Разделы админки" className="-m-1 flex flex-nowrap gap-2 overflow-x-auto p-1 sm:flex-wrap">
         {links.map((link) => (

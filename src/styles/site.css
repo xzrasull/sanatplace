@@ -234,9 +234,6 @@
     justify-content: center;
     gap: 10px;
   }
-  .menu-account form {
-    display: contents;
-  }
   .menu-note {
     color: var(--mute);
     font-size: 0.9rem;
@@ -2503,4 +2500,94 @@
     padding: 26px;
   }
 }
+}
+
+/* the «Выйти?» window (sign-out-button.tsx) */
+@layer components {
+  dialog.confirm {
+    width: min(100% - 32px, 400px);
+    max-width: none;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 24px 60px rgba(20, 35, 26, 0.28);
+  }
+  dialog.confirm::backdrop {
+    background: rgba(20, 35, 26, 0.42);
+    backdrop-filter: blur(3px);
+  }
+  dialog.confirm[open] {
+    animation: confirm-in 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  dialog.confirm[open]::backdrop {
+    animation: confirm-fade 0.22s ease;
+  }
+  .confirm-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 30px 26px 24px;
+    text-align: center;
+  }
+  .confirm-ic {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 6px;
+    border-radius: 50%;
+    background: var(--sage-l);
+    color: var(--sage-d);
+  }
+  .confirm-ic svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .confirm-body h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    line-height: 1.15;
+  }
+  .confirm-body p {
+    margin: 0;
+    color: var(--mute);
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+  .confirm-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-top: 16px;
+  }
+  .confirm-actions .btn {
+    padding-inline: 16px;
+  }
+  @keyframes confirm-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.97);
+    }
+  }
+  @keyframes confirm-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    dialog.confirm[open],
+    dialog.confirm[open]::backdrop {
+      animation: none;
+    }
+  }
 }

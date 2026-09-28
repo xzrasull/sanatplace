@@ -21,7 +21,15 @@ test('a signed-in user can sign out from the menu', async ({ page }) => {
   const menu = page.getByRole('navigation', { name: 'Основная навигация' });
   await page.getByRole('button', { name: 'Меню' }).click();
   await expect(menu.getByRole('link', { name: 'Профиль' })).toHaveAttribute('href', '/cabinet');
+  // «Выйти» asks first: «Остаться» keeps the session
   await menu.getByRole('button', { name: 'Выйти' }).click();
+  const confirm = page.getByRole('dialog', { name: 'Выйти из аккаунта?' });
+  await expect(confirm.getByRole('button', { name: 'Остаться' })).toBeFocused();
+  await confirm.getByRole('button', { name: 'Остаться' }).click();
+  await expect(confirm).toBeHidden();
+  await expect(menu.getByRole('link', { name: 'Профиль' })).toBeVisible();
+  await menu.getByRole('button', { name: 'Выйти' }).click();
+  await confirm.getByRole('button', { name: 'Выйти' }).click();
   await expect(page).toHaveURL(/\/$/);
   // sign-out reloads the page: retry until the menu button is interactive
   await expect(async () => {

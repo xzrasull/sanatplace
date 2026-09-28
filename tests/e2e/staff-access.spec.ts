@@ -34,6 +34,7 @@ test('the admin gets the database editor on top of moderation', async ({ page, b
   await expect(page.getByRole('link', { name: 'Добавить запись' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Выйти' }).click();
+  await page.getByRole('dialog', { name: 'Выйти из аккаунта?' }).getByRole('button', { name: 'Выйти' }).click();
   await expect(page).toHaveURL(/\/sanatadmin$/);
   await page.goto('/admin/sellers');
   await expect(page).toHaveURL(/\/sanatadmin$/);
