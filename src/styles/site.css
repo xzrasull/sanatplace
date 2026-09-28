@@ -852,31 +852,19 @@
   .heart[aria-disabled='true'] {
     cursor: progress;
   }
-  /* on a card: a bare white heart in the top right corner, no plate */
+  /* on a card: a white square with the heart in the top right corner */
   .card .heart {
-    top: 8px;
-    right: 8px;
+    top: 14px;
+    right: 14px;
     width: 46px;
     height: 46px;
-    background: transparent;
-    color: #fff;
-  }
-  .card .heart:hover {
-    background: transparent;
-    color: var(--rose);
-  }
-  .card .heart.on,
-  .card .heart[aria-pressed='true'] {
-    color: var(--rose);
-  }
-  .card .heart.own {
-    color: rgba(255, 255, 255, 0.75);
+    border-radius: 0;
+    background: #fff;
   }
   .card .heart svg {
-    width: 24px;
-    height: 24px;
-    stroke-width: 1.8;
-    filter: drop-shadow(0 1px 2px rgba(20, 35, 26, 0.45));
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.5;
   }
   .meta {
     display: flex;
@@ -2453,14 +2441,14 @@
     border-width: 4px;
   }
   .card .heart {
-    top: 4px;
-    right: 4px;
-    width: 40px;
-    height: 40px;
+    top: 8px;
+    right: 8px;
+    width: 38px;
+    height: 38px;
   }
   .card .heart svg {
-    width: 21px;
-    height: 21px;
+    width: 19px;
+    height: 19px;
   }
   .meta h3 {
     font-size: 1.15rem;
