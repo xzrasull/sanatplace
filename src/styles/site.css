@@ -53,19 +53,15 @@
   .logo {
     display: flex;
     align-items: center;
+    flex: none;
+    width: 190px;
     text-decoration: none;
-    font: 500 2.1rem/1 var(--serif);
-    letter-spacing: 0.01em;
     color: inherit;
   }
-  .logo span {
+  .logo img {
     display: block;
-    padding-bottom: 0.08em;
-  }
-  .logo b {
-    font-weight: 500;
-    font-style: italic;
-    color: var(--sage);
+    width: 100%;
+    height: auto;
   }
   /* home: the header lies over the banner photo */
   .stage:has(.hero) .nav {
@@ -76,8 +72,8 @@
     color: #fff;
     border-bottom: 0;
   }
-  .stage:has(.hero) .nav .logo b {
-    color: #dfeadf;
+  .stage:has(.hero) .nav .logo img {
+    filter: brightness(0) invert(1);
   }
   /* the open panel lives inside the header: lift it over the buy bar */
   .nav:has(.menu:not([hidden])) {
@@ -1688,8 +1684,6 @@
   .foot a.logo {
     display: flex;
     padding: 0;
-    color: var(--ink);
-    font-size: 2.1rem;
   }
   .copy {
     display: flex;
@@ -1985,7 +1979,7 @@
     padding: 24px 16px 40px;
   }
   .logo {
-    font-size: 1.7rem;
+    width: 160px;
   }
   .hero,
   .slide {
