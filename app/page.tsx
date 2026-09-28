@@ -23,7 +23,7 @@ const liveBanners = unstable_cache(() => listLiveBanners(getDb()), ['live-banner
   tags: ['banners'],
 });
 
-// «Афиша»: the three nearest exhibitions and events (else the latest ones); the
+// «Афиша»: the nearest exhibitions and events, then the newest posts; the
 // admin's journal actions revalidate the 'posts' tag.
 const upcomingEvents = unstable_cache((today: string) => listHomeAfisha(getDb(), today, 3), ['home-afisha'], {
   revalidate: 60,
@@ -100,7 +100,7 @@ export default async function HomePage() {
           {events.length > 0 ? (
             <PostGrid posts={events} today={today} />
           ) : (
-            <p className="empty">Скоро здесь появятся выставки и мастер-классы.</p>
+            <p className="empty">Скоро здесь появятся выставки, события и новости.</p>
           )}
         </section>
       </div>
