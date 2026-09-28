@@ -16,7 +16,6 @@ const ITEMS: Item[] = [
   { href: '/gallery', label: 'Каталог', current: (p) => p === '/gallery' || p.startsWith('/gallery/artwork/') },
   { href: '/artists', label: 'Художники', current: (p) => under('/artists')(p) || p.startsWith('/gallery/artist/') },
   { href: '/journal', label: 'Афиша', current: under('/journal') },
-  { href: '/sell', label: 'Продавцам', current: under('/sell') },
   { href: '/favorites', label: 'Wishlist', current: under('/favorites'), wish: true },
 ];
 

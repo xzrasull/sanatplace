@@ -79,6 +79,28 @@ export async function listUpcomingEvents(db: Db, today: string, limit = 3, now =
     .limit(limit);
 }
 
+// The home page «Афиша»: exhibitions and events that have not finished yet,
+// soonest first, topped up with the newest finished ones so the block is never
+// empty while the journal has any.
+export async function listHomeAfisha(db: Db, today: string, limit = 3, now = new Date()): Promise<PostSummary[]> {
+  const upcoming = await listUpcomingEvents(db, today, limit, now);
+  if (upcoming.length >= limit) return upcoming;
+  const seen = upcoming.map((p) => p.id);
+  const past = await db
+    .select(SUMMARY)
+    .from(posts)
+    .where(
+      and(
+        live(now),
+        inArray(posts.category, ['exhibition', 'event']),
+        seen.length ? notInArray(posts.id, seen) : undefined,
+      ),
+    )
+    .orderBy(sql`coalesce(${posts.endsOn}, ${posts.startsOn}) desc nulls last`, ...newestFirst)
+    .limit(limit - upcoming.length);
+  return [...upcoming, ...past];
+}
+
 // «Читайте также»: the same rubric first, then the newest of the rest.
 export async function listRelatedPosts(db: Db, post: Pick<Post, 'id' | 'category'>, limit = 3, now = new Date()) {
   const same = await db

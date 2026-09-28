@@ -1087,6 +1087,93 @@
     gap: 10px;
     flex: 1 1 100%;
   }
+
+  /* the site's own select (custom-select.tsx) */
+  .csel {
+    position: relative;
+    font: 500 0.95rem var(--serif);
+    color: var(--ink);
+    letter-spacing: normal;
+    text-transform: none;
+  }
+  .csel-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 20px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--field-line);
+    border-radius: 999px;
+    cursor: pointer;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .csel-btn:hover,
+  .csel-btn:focus-visible,
+  .csel-btn[aria-expanded='true'] {
+    outline: none;
+    border-color: var(--sage);
+    box-shadow: 0 0 0 3px var(--ring-soft);
+  }
+  .csel-v {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .csel-ic {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--sage);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.25s;
+  }
+  .csel-btn[aria-expanded='true'] .csel-ic {
+    transform: rotate(180deg);
+  }
+  .csel-list {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 8px;
+    list-style: none;
+    max-height: 280px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(20, 35, 26, 0.18);
+  }
+  .csel-list [role='option'] {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    cursor: pointer;
+    outline: none;
+  }
+  .csel-list [role='option']:hover,
+  .csel-list [role='option']:focus {
+    background: var(--sage-l);
+  }
+  .csel-list [role='option'][aria-selected='true'] {
+    background: var(--sage);
+    color: #fff;
+  }
   .pager {
     display: flex;
     align-items: center;
@@ -1944,14 +2031,22 @@
   }
   .jpropose {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px 28px;
+    padding: 20px 26px;
+    border: 1px solid var(--field-line);
+    border-radius: var(--radius);
+  }
+  .jpropose h2 {
+    font-size: 1.35rem;
+    line-height: 1.2;
   }
   .jpropose p {
-    margin: 0;
-    color: #4b544d;
-    max-width: 60ch;
+    margin: 4px 0 0;
+    color: var(--mute);
+    font-size: 0.98rem;
   }
   .post {
     display: flex;

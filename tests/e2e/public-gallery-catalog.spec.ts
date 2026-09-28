@@ -75,3 +75,41 @@ test('catalog filters stay folded until opened and fold again after applying', a
   await expect(toggle).toContainText('1');
   await expect(page.getByRole('link', { name: 'Убрать: Цена: от 1 до 999999 TJS' })).toBeVisible();
 });
+
+test('technique, artist and sort are the site own dropdowns, one open at a time', async ({ page }) => {
+  await page.goto('/gallery');
+  const toggle = page.getByRole('button', { name: /Фильтры/ });
+  await toggle.click();
+  const sort = page.getByRole('button', { name: /Сортировка/ });
+  const artist = page.getByRole('button', { name: /Художник/ });
+  await expect(sort).toHaveAttribute('aria-haspopup', 'listbox');
+  await expect(sort).toContainText('Сначала новые');
+
+  // a click on another dropdown closes the first
+  await sort.click();
+  await expect(page.getByRole('listbox', { name: 'Сортировка' })).toBeVisible();
+  await artist.click();
+  await expect(page.getByRole('listbox', { name: 'Сортировка' })).toBeHidden();
+  await expect(page.getByRole('option', { name: 'Все художники' })).toBeFocused();
+
+  // Escape closes and gives the focus back
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('listbox', { name: 'Художник' })).toBeHidden();
+  await expect(artist).toBeFocused();
+
+  // folding the panel closes an open list
+  await artist.click();
+  await toggle.click();
+  await toggle.click();
+  await expect(page.getByRole('listbox', { name: 'Художник' })).toBeHidden();
+
+  // the keyboard: open, End, Enter picks «По названию»
+  await sort.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('option', { name: 'Сначала новые' })).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('End');
+  await expect(page.getByRole('option', { name: 'По названию' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/sort=az/);
+  await expect(page.getByRole('button', { name: /Сортировка/ })).toContainText('По названию');
+});
