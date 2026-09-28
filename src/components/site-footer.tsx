@@ -17,6 +17,7 @@ export function SiteFooter() {
             <Link href="/artists">Художники</Link>
             <Link href="/journal">Афиша и журнал</Link>
             <Link href="/favorites">Wishlist</Link>
+            <Link href="/about">О нас</Link>
           </nav>
           <nav aria-label="Продавцам">
             <h4>Продавцам</h4>
