@@ -6,6 +6,7 @@ import { posts } from '../../src/db/schema';
 import { POSTS_BUCKET } from '../../src/lib/uploads/buckets';
 import { dropImages } from '../../src/lib/uploads/upload-image';
 import { signInAsNewUser, signInAsStaff } from './helpers/auth';
+import { pick, selectButton } from './helpers/select';
 
 // a far-future event, so it is the soonest upcoming one only if nothing else is
 const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
@@ -19,17 +20,20 @@ test('the admin writes an event as a draft, publishes it, and it shows on the si
   await signInAsStaff(page, 'admin');
   try {
     await page.goto('/admin/journal/new');
-    // picked with the keyboard, as a person does (separate input and change
-    // events): the choice must stick
-    const rubric = page.getByLabel('Рубрика');
+    // picked with the keyboard, as a person does: the choice must stick
+    const rubric = selectButton(page, 'Рубрика');
     await rubric.focus();
     await page.keyboard.press('ArrowDown');
-    await expect(rubric).toHaveValue('event');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(rubric).toContainText('Событие');
     await expect(page.getByLabel('Дата начала')).toBeVisible();
     await page.keyboard.press('ArrowDown');
-    await expect(rubric).toHaveValue('news');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(rubric).not.toContainText('Событие');
     await expect(page.getByLabel('Дата начала')).toHaveCount(0);
-    await rubric.selectOption('event');
+    await pick(page, 'Рубрика', 'Событие');
     await page.getByLabel('Заголовок', { exact: true }).fill(title);
     await page.getByLabel('Адрес страницы').fill(slug);
     await page.getByLabel(/Короткое описание/).fill('Три часа с кистью.');
@@ -43,9 +47,9 @@ test('the admin writes an event as a draft, publishes it, and it shows on the si
     await expect(page.getByText('Черновик сохранён.')).toBeVisible({ timeout: 20000 });
 
     // the filters apply as soon as a choice is made
-    await page.getByLabel('Статус').selectOption('draft');
+    await pick(page, 'Статус', 'Черновики');
     await expect(page).toHaveURL(/[?&]s=draft/);
-    await page.getByLabel('Рубрика').selectOption('event');
+    await pick(page, 'Рубрика', 'События');
     await expect(page).toHaveURL(/[?&]c=event/);
     await expect(page.getByRole('heading', { name: title })).toBeVisible();
     await page.goto('/admin/journal');

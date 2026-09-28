@@ -1122,10 +1122,29 @@
     border-color: var(--sage);
     box-shadow: 0 0 0 3px var(--ring-soft);
   }
+  .csel-btn[data-invalid] {
+    border-color: #9b3440;
+  }
   .csel-v {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+  .csel-ph {
+    color: var(--mute);
+  }
+  /* carries the value and the browser's "fill this in" bubble, unseen */
+  .csel-in {
+    position: absolute;
+    left: 20px;
+    bottom: 0;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
   }
   .csel-ic {
     flex: none;

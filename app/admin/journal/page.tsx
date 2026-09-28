@@ -6,7 +6,7 @@ import { listAllPosts, type Post } from '@/src/lib/journal/posts';
 import { AdminNav } from '@/src/components/admin/admin-nav';
 import { ConfirmDelete } from '@/src/components/admin/confirm-delete';
 import { FilterForm } from '@/src/components/admin/filter-form';
-import { NativeSelect } from '@/src/components/form/native-select';
+import { CustomSelect } from '@/src/components/sanat/custom-select';
 import { SubmitButton } from '@/src/components/form/submit-button';
 import { Input } from '@/src/components/ui/input';
 import { buttonVariants } from '@/src/components/ui/button';
@@ -63,24 +63,24 @@ export default async function AdminJournalPage({
       )}
 
       <FilterForm className="mt-6 flex flex-wrap items-end gap-3" role="search" aria-label="Фильтр материалов">
-        <label className="grid gap-1.5 text-sm font-medium">
-          <span>Рубрика</span>
-          <NativeSelect name="c" defaultValue={category ?? ''}>
-            {CATEGORY_TABS.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </NativeSelect>
-        </label>
-        <label className="grid gap-1.5 text-sm font-medium">
-          <span>Статус</span>
-          <NativeSelect name="s" defaultValue={status ?? ''}>
-            <option value="">Все</option>
-            <option value="draft">Черновики</option>
-            <option value="published">Опубликованные</option>
-          </NativeSelect>
-        </label>
+        <CustomSelect
+          className="grid min-w-[12rem] gap-1.5 text-sm font-medium"
+          name="c"
+          label="Рубрика"
+          options={CATEGORY_TABS.map((t) => ({ value: t.value, label: t.label }))}
+          defaultValue={category ?? ''}
+        />
+        <CustomSelect
+          className="grid min-w-[12rem] gap-1.5 text-sm font-medium"
+          name="s"
+          label="Статус"
+          options={[
+            { value: '', label: 'Все' },
+            { value: 'draft', label: 'Черновики' },
+            { value: 'published', label: 'Опубликованные' },
+          ]}
+          defaultValue={status ?? ''}
+        />
         <label className="grid min-w-[14rem] flex-1 gap-1.5 text-sm font-medium">
           <span>Поиск по названию</span>
           <Input type="search" name="q" defaultValue={q} />

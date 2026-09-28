@@ -1,8 +1,8 @@
 'use client';
 
 import { startTransition, useActionState, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Field } from '@/src/components/form/field';
-import { NativeSelect } from '@/src/components/form/native-select';
+import { Field, FIELD_CLASS } from '@/src/components/form/field';
+import { CustomSelect } from '@/src/components/sanat/custom-select';
 import { MarkdownBody } from '@/src/components/journal/markdown-body';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
@@ -199,24 +199,15 @@ export function PostForm({
           </p>
         )}
 
-        <Field label="Рубрика">
-          <NativeSelect
-            name="category"
-            // Uncontrolled on purpose: the form re-renders on every `input`
-            // event (the preview), which comes before the select's `change`; a
-            // controlled value would be put back to the old rubric in between.
-            defaultValue={category}
-            onInput={(e) => setCategory(e.currentTarget.value as PostCategory)}
-            onChange={(e) => setCategory(e.currentTarget.value as PostCategory)}
-            required
-          >
-            {POST_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {CATEGORY_NAME[c]}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
+        <CustomSelect
+          className={FIELD_CLASS}
+          name="category"
+          label="Рубрика"
+          options={POST_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_NAME[c] }))}
+          defaultValue={category}
+          onChange={(v) => setCategory(v as PostCategory)}
+          required
+        />
 
         <Field label="Заголовок">
           <Input
@@ -380,16 +371,13 @@ export function PostForm({
           )}
         </div>
 
-        <Field label="Связанный художник (необязательно)">
-          <NativeSelect name="artistId" defaultValue={post?.artistId ?? ''}>
-            <option value="">Без художника</option>
-            {artists.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
+        <CustomSelect
+          className={FIELD_CLASS}
+          name="artistId"
+          label="Связанный художник (необязательно)"
+          options={[{ value: '', label: 'Без художника' }, ...artists.map((a) => ({ value: a.id, label: a.name }))]}
+          defaultValue={post?.artistId ?? ''}
+        />
         <label className="flex items-center gap-2">
           <input type="checkbox" name="isFeatured" defaultChecked={post?.isFeatured ?? false} />
           Главный материал (крупно вверху «Афиши»; у остальных снимется)
