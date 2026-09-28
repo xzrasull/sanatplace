@@ -3,10 +3,12 @@
 import { requireStaff } from '@/src/lib/auth/staff';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { getDb } from '@/src/db';
 import { approveOrRejectApplication } from '@/src/lib/sellers/applications';
 import { changeSellerAvatar } from '@/src/lib/sellers/avatar';
 import { isUuid } from '@/src/lib/gallery/types';
+import { notifySellerApproved } from '@/src/lib/telegram-bot/notify';
 
 export async function approveApplication(formData: FormData) {
   await requireStaff();
@@ -19,6 +21,8 @@ export async function approveApplication(formData: FormData) {
     adminUserId: null,
     decision: 'approve',
   });
+  // the artist hears from the bot; the admin does not wait for Telegram
+  after(() => notifySellerApproved(getDb(), applicationIdRaw));
   revalidatePath('/admin/sellers');
 }
 
