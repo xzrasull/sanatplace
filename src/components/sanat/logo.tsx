@@ -1,13 +1,13 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { BRAND_NAME } from '@/src/lib/brand';
 
-// The word mark: "sanat" upright, "place" in green italics.
+// The word mark with the diamond ornament, drawn black; over the home banner
+// CSS turns it white (see .stage:has(.hero) .nav .logo img).
 export function Logo() {
   return (
     <Link href="/" className="logo" aria-label={`${BRAND_NAME}, на главную`}>
-      <span aria-hidden="true">
-        sanat<b>place</b>
-      </span>
+      <Image src="/logo.svg" alt="" width={779} height={172} priority />
     </Link>
   );
 }
