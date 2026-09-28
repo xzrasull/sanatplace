@@ -166,7 +166,7 @@ export function CustomSelect({
           onClick={() => setOpen(!open)}
           onKeyDown={onButtonKey}
         >
-          <span className={value === '' ? 'csel-v csel-ph' : 'csel-v'}>{current?.label}</span>
+          <span className={required && value === '' ? 'csel-v csel-ph' : 'csel-v'}>{current?.label}</span>
           <svg className="csel-ic" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M5 9l7 7 7-7" />
           </svg>
