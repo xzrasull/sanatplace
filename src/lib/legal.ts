@@ -11,7 +11,7 @@ export const OPERATOR = {
 };
 
 // When the documents last changed; shown on every document page.
-export const LEGAL_UPDATED = '26 сентября 2026 г.';
+export const LEGAL_UPDATED = '29 сентября 2026 г.';
 
 export const LEGAL_DOCS = [
   { href: '/terms', title: 'Пользовательское соглашение' },
