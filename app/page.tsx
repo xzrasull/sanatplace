@@ -8,7 +8,7 @@ import { likeInfoFor, type LikeInfo } from '@/src/lib/likes/likes';
 import { plural } from '@/src/lib/ru-format';
 import { BRAND_NAME } from '@/src/lib/brand';
 import { todayInDushanbe } from '@/src/lib/journal/post-form';
-import { listUpcomingEvents, type PostSummary } from '@/src/lib/journal/posts';
+import { listHomeAfisha, type PostSummary } from '@/src/lib/journal/posts';
 import { PostGrid } from '@/src/components/journal/post-card';
 import { ArtworkCard, RAIL_CARD_SIZES } from '@/src/components/artwork/artwork-card';
 import { Hero } from '@/src/components/home/hero';
@@ -23,9 +23,9 @@ const liveBanners = unstable_cache(() => listLiveBanners(getDb()), ['live-banner
   tags: ['banners'],
 });
 
-// «Афиша»: the three nearest exhibitions and events; the admin's journal
-// actions revalidate the 'posts' tag.
-const upcomingEvents = unstable_cache((today: string) => listUpcomingEvents(getDb(), today, 3), ['upcoming-events'], {
+// «Афиша»: the three nearest exhibitions and events (else the latest ones); the
+// admin's journal actions revalidate the 'posts' tag.
+const upcomingEvents = unstable_cache((today: string) => listHomeAfisha(getDb(), today, 3), ['home-afisha'], {
   revalidate: 60,
   tags: ['posts'],
 });
@@ -85,22 +85,24 @@ export default async function HomePage() {
             </Link>
           </Rail>
         )}
-        {events.length > 0 && (
-          <section className="sec home-j" aria-labelledby="home-j-t">
-            <div className="sec-head">
-              <h2 id="home-j-t">Афиша</h2>
-              <Link className="more" href="/journal">
-                Смотреть все{' '}
-                <i>
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M9 5l7 7-7 7" />
-                  </svg>
-                </i>
-              </Link>
-            </div>
+        <section className="sec home-j" aria-labelledby="home-j-t">
+          <div className="sec-head">
+            <h2 id="home-j-t">Афиша</h2>
+            <Link className="more" href="/journal">
+              Смотреть все{' '}
+              <i>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </i>
+            </Link>
+          </div>
+          {events.length > 0 ? (
             <PostGrid posts={events} today={today} />
-          </section>
-        )}
+          ) : (
+            <p className="empty">Скоро здесь появятся выставки и мастер-классы.</p>
+          )}
+        </section>
       </div>
     </main>
   );

@@ -88,14 +88,13 @@ export default async function JournalPage({ searchParams }: { searchParams: Prom
         </div>
 
         {propose && (
-          <section className="panel jpropose" aria-labelledby="jpropose-t">
-            <h2 id="jpropose-t">Хотите разместить своё событие?</h2>
-            <p>
-              Напишите администратору в Telegram: что за событие, даты, место и пара фотографий. Мы подготовим материал и
-              опубликуем его в афише.
-            </p>
-            <a className="btn btn-tg" href={propose} target="_blank" rel="noopener noreferrer">
-              Написать администратору
+          <section className="jpropose" aria-labelledby="jpropose-t">
+            <div>
+              <h2 id="jpropose-t">Хотите разместить своё событие?</h2>
+              <p>Напишите администратору в Telegram — опубликуем в афише.</p>
+            </div>
+            <a className="btn sm btn-tg" href={propose} target="_blank" rel="noopener noreferrer">
+              Написать
             </a>
           </section>
         )}

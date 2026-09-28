@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { catalogHref, type CatalogParams } from '@/src/lib/catalog-href';
 import type { CatalogOptions } from '@/src/lib/gallery/catalog';
 import { startNavProgress } from '@/src/components/sanat/instant-feedback';
+import { CustomSelect } from '@/src/components/sanat/custom-select';
 
 export type ActiveTag = { label: string; href: string };
 
@@ -46,6 +47,17 @@ export function CatalogFilters({
   const form = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  // the one technique/artist/sort list that is open, if any
+  const [openSelect, setOpenSelect] = useState<string | null>(null);
+  const toggle = (v: boolean) => {
+    setOpen(v);
+    if (!v) setOpenSelect(null);
+  };
+  const selectProps = (name: string) => ({
+    open: open && openSelect === name,
+    onOpenChange: (v: boolean) => setOpenSelect((cur) => (v ? name : cur === name ? null : cur)),
+    onChange: () => apply(),
+  });
 
   // The search box is controlled so typing keeps focus while the page updates;
   // it follows the URL when the query changes elsewhere (e.g. the header search).
@@ -80,7 +92,7 @@ export function CatalogFilters({
     e.preventDefault();
     // the "Применить" button folds the panel; Enter in a field keeps it as it is
     const submitter = (e.nativeEvent as SubmitEvent).submitter;
-    if (submitter?.hasAttribute('data-apply')) setOpen(false);
+    if (submitter?.hasAttribute('data-apply')) toggle(false);
     apply();
   };
 
@@ -105,7 +117,7 @@ export function CatalogFilters({
             type="button"
             aria-expanded={open}
             aria-controls={panelId}
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => toggle(!open)}
           >
             Фильтры
             {activeCount > 0 && (
@@ -147,38 +159,21 @@ export function CatalogFilters({
               ))}
             </div>
           </fieldset>
-          <label className="field">
-            <span>Техника</span>
-            <select name="techniqueId" defaultValue={values.techniqueId ?? ''} onChange={() => apply()}>
-              <option value="">Все техники</option>
-              {options.techniques.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Художник</span>
-            <select name="artistId" defaultValue={values.artistId ?? ''} onChange={() => apply()}>
-              <option value="">Все художники</option>
-              {options.artists.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Сортировка</span>
-            <select name="sort" defaultValue={values.sort ?? 'new'} onChange={() => apply()}>
-              {SORTS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <CustomSelect
+            name="techniqueId"
+            label="Техника"
+            options={[{ value: '', label: 'Все техники' }, ...options.techniques.map((t) => ({ value: t.id, label: t.name }))]}
+            defaultValue={values.techniqueId ?? ''}
+            {...selectProps('techniqueId')}
+          />
+          <CustomSelect
+            name="artistId"
+            label="Художник"
+            options={[{ value: '', label: 'Все художники' }, ...options.artists.map((a) => ({ value: a.id, label: a.name }))]}
+            defaultValue={values.artistId ?? ''}
+            {...selectProps('artistId')}
+          />
+          <CustomSelect name="sort" label="Сортировка" options={SORTS} defaultValue={values.sort ?? 'new'} {...selectProps('sort')} />
           <label className="field">
             <span>Цена от, TJS</span>
             <input type="number" name="minPrice" min="0" inputMode="numeric" placeholder="0" defaultValue={values.minPrice ?? ''} />

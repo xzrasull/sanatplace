@@ -30,7 +30,7 @@ test.describe('on a phone', () => {
     const menu = page.getByRole('navigation', { name: 'Основная навигация' });
     await expect(menu.getByRole('link', { name: 'Войти через Telegram' })).toHaveAttribute('href', '/sign-in');
     await expect(menu.getByRole('link', { name: 'Главная' })).toHaveAttribute('aria-current', 'page');
-    await expect(menu.getByRole('link', { name: 'Продавцам' })).toHaveAttribute('href', '/sell');
+    await expect(menu.getByRole('link', { name: 'Продавцам' })).toHaveCount(0);
 
     // 1. Escape, focus back on the button
     await page.keyboard.press('Escape');
