@@ -3,6 +3,7 @@
 export const ARTWORK_IMAGES_BUCKET = 'artworks';
 export const BANNERS_BUCKET = 'banners';
 export const AVATARS_BUCKET = 'avatars';
+export const POSTS_BUCKET = 'posts';
 
 // Our own stored files go through next/image's optimiser; anything else (old
 // or test URLs) is shown as it is.

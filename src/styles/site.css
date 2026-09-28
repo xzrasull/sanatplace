@@ -1806,6 +1806,327 @@
     background: var(--tile);
   }
 
+  /* ---------- афиша и журнал ---------- */
+  .pgrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 44px 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .pcard {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .pthumb {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--tile);
+  }
+  .pimg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    user-select: none;
+    -webkit-user-drag: none;
+    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @media (hover: hover) {
+    .pcard:hover .pimg,
+    .jfeat:hover .pimg {
+      transform: scale(1.04);
+    }
+  }
+  .ptag {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    background: #fff;
+    color: var(--sage-d);
+    font: 700 0.78rem/1 var(--serif);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    border-radius: 999px;
+  }
+  .pmeta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 18px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .pdate {
+    margin: 0;
+    color: var(--sage);
+    font: 700 0.85rem/1.2 var(--serif);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .pmeta h3 {
+    font: 500 1.65rem/1.15 var(--serif);
+    color: var(--ink);
+  }
+  .pmeta:hover h3 {
+    color: var(--sage-d);
+  }
+  .pex {
+    margin: 0;
+    color: #6a726c;
+    font-size: 1.05rem;
+    line-height: 1.45;
+  }
+  .pplace {
+    margin: 2px 0 0;
+    color: var(--mute);
+    font-size: 1rem;
+  }
+  .jfeat {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: clamp(24px, 5vw, 72px);
+    align-items: center;
+    margin-bottom: clamp(44px, 6vw, 72px);
+  }
+  .jfeat-img {
+    position: relative;
+    display: block;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    background: var(--tile);
+  }
+  .jfeat-txt {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .jfeat-txt h2 {
+    font-size: clamp(2.1rem, 3.6vw, 3rem);
+    line-height: 1.05;
+  }
+  .jfeat-txt p {
+    margin: 0;
+    color: #4b544d;
+    font-size: 1.12rem;
+  }
+  .jfeat-txt .pplace {
+    color: var(--mute);
+  }
+  .jhead p.lead {
+    margin: 10px 0 0;
+    color: #5d665f;
+    font-size: 1.15rem;
+    max-width: 52ch;
+  }
+  .jtabs {
+    margin-top: 22px;
+  }
+  .chips.jchips {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .chip[aria-current='page'] {
+    background: var(--sage);
+    border-color: var(--sage);
+    color: #fff;
+  }
+  .jmore {
+    display: flex;
+    justify-content: center;
+    margin-top: 48px;
+  }
+  .jpropose {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .jpropose p {
+    margin: 0;
+    color: #4b544d;
+    max-width: 60ch;
+  }
+  .post {
+    display: flex;
+    flex-direction: column;
+    gap: 34px;
+  }
+  .post-head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 820px;
+  }
+  .post-lead {
+    margin: 0;
+    color: #4b544d;
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+  .post-cover {
+    position: relative;
+    aspect-ratio: 21 / 9;
+    overflow: hidden;
+    background: var(--tile);
+  }
+  .post-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+  .post-cols:has(.post-aside) {
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  }
+  .post-aside {
+    position: sticky;
+    top: 24px;
+    background: var(--sage-xl);
+    border-radius: var(--radius);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .pfacts {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .pfacts dt {
+    color: var(--sage);
+    font: 700 0.78rem/1 var(--serif);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .pfacts dd {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.35;
+  }
+  .post-aside .small {
+    margin: 0;
+    color: var(--mute);
+    font-size: 0.95rem;
+  }
+  .post-over {
+    margin: 0;
+    padding: 12px 16px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--mute);
+    text-align: center;
+    font-weight: 600;
+  }
+  .post-body {
+    max-width: 700px;
+    color: #333c36;
+  }
+  .post-body p,
+  .post-body ul,
+  .post-body ol,
+  .post-body blockquote {
+    margin: 0 0 1.15em;
+    font-size: 1.22rem;
+    line-height: 1.7;
+  }
+  .post-body > p:first-child::first-letter {
+    font: 500 3.4em/0.85 var(--serif);
+    float: left;
+    margin: 0.06em 0.1em 0 0;
+    color: var(--sage-d);
+  }
+  .post-body h2,
+  .post-body h3 {
+    margin: 1.4em 0 0.5em;
+    color: var(--ink);
+    font-weight: 500;
+    line-height: 1.15;
+  }
+  .post-body h2 {
+    font-size: clamp(1.6rem, 2.6vw, 2rem);
+  }
+  .post-body h3 {
+    font-size: 1.45rem;
+  }
+  .post-body ul {
+    list-style: disc;
+    padding-left: 1.3em;
+  }
+  .post-body ol {
+    list-style: decimal;
+    padding-left: 1.3em;
+  }
+  .post-body li + li {
+    margin-top: 0.3em;
+  }
+  .post-body blockquote {
+    border-left: 2px solid var(--sage);
+    padding-left: 1em;
+    font-style: italic;
+  }
+  .post-body a,
+  .post-artist a {
+    color: var(--sage-d);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .post-artist {
+    margin-top: 12px;
+    color: var(--mute);
+    font-size: 1.1rem;
+  }
+  .post-preview {
+    max-width: 400px;
+  }
+  @media (max-width: 1100px) {
+    .pgrid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 860px) {
+    .jfeat {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .post-cols:has(.post-aside) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .post-aside {
+      position: static;
+    }
+    .post-cover {
+      aspect-ratio: 16 / 10;
+    }
+  }
+  @media (max-width: 640px) {
+    .pgrid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 36px;
+    }
+    .pmeta h3 {
+      font-size: 1.5rem;
+    }
+    .post-body p,
+    .post-body ul,
+    .post-body ol {
+      font-size: 1.14rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pimg {
+      transition: none;
+    }
+  }
+
 /* ---------- motion ---------- */
 @keyframes kb {
   from {

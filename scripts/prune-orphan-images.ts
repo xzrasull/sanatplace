@@ -7,12 +7,12 @@
 // Files younger than a day are never touched: an upload whose row is still
 // being saved looks orphaned for a moment.
 import { getDb } from '../src/db';
-import { ARTWORK_IMAGES_BUCKET, AVATARS_BUCKET, BANNERS_BUCKET } from '../src/lib/uploads/buckets';
+import { ARTWORK_IMAGES_BUCKET, AVATARS_BUCKET, BANNERS_BUCKET, POSTS_BUCKET } from '../src/lib/uploads/buckets';
 import { findOrphans, type StoredFile } from '../src/lib/uploads/orphans';
 import { listReferencedImageUrls } from '../src/lib/uploads/references';
 import { getStorageClient } from '../src/lib/uploads/upload-image';
 
-const BUCKETS = [ARTWORK_IMAGES_BUCKET, AVATARS_BUCKET, BANNERS_BUCKET];
+const BUCKETS = [ARTWORK_IMAGES_BUCKET, AVATARS_BUCKET, BANNERS_BUCKET, POSTS_BUCKET];
 const MIN_AGE_MS = 24 * 60 * 60 * 1000;
 const PAGE = 1000;
 const REMOVE_BATCH = 100;

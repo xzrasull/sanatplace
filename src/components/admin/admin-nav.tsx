@@ -4,10 +4,11 @@ import type { StaffRole } from '@/src/lib/auth/staff';
 import { SubmitButton } from '@/src/components/form/submit-button';
 
 // Moderators: applications, artworks, categories, techniques. The admin also
-// gets the database editor and the home page banners.
+// gets the database editor, the home page banners and the journal.
 const ADMIN_LINKS = [
   { href: '/admin/database', label: 'База данных' },
   { href: '/admin/banners', label: 'Баннеры' },
+  { href: '/admin/journal', label: 'Афиша и журнал' },
 ];
 const LINKS = [
   { href: '/admin/sellers', label: 'Заявки продавцов' },
