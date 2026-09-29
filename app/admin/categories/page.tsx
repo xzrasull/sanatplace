@@ -6,7 +6,7 @@ import { ReferenceList } from '@/src/components/admin/reference-list';
 import { addCategory, renameCategoryAction } from './actions';
 
 export default async function AdminCategoriesPage() {
-  const role = await requireStaff();
+  const role = await requireStaff('admin');
 
   const categories = await listCategories(getDb());
 

@@ -184,3 +184,12 @@ export const posts = pgTable(
     index('posts_starts_on_idx').on(t.startsOn),
   ],
 );
+
+// Staff passwords set from the admin area (scrypt hashes, see staff-password.ts).
+// A login without a row here signs in with the hash from its environment
+// variable. Sessions started before `passwordChangedAt` no longer count.
+export const staffAccounts = pgTable('staff_accounts', {
+  login: text('login').primaryKey(),
+  passwordHash: text('password_hash').notNull(),
+  passwordChangedAt: timestamp('password_changed_at').notNull().defaultNow(),
+});

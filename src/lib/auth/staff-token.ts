@@ -9,8 +9,14 @@ export const STAFF_MAX_AGE_SECONDS = 12 * 60 * 60;
 
 export type StaffRole = 'admin' | 'moderator';
 
-interface StaffPayload {
+// Who is signed in and when: `iat` lets a password change end older sessions.
+export interface StaffSession {
   role: StaffRole;
+  login: string;
+  iat: number;
+}
+
+interface StaffPayload extends StaffSession {
   exp: number;
 }
 
@@ -20,20 +26,22 @@ const sign = async (body: string, secret: string) =>
 
 export async function createStaffToken(
   role: StaffRole,
+  login: string,
   secret: string,
   nowSeconds = Math.floor(Date.now() / 1000),
 ): Promise<string> {
-  const payload: StaffPayload = { role, exp: nowSeconds + STAFF_MAX_AGE_SECONDS };
+  const payload: StaffPayload = { role, login, iat: nowSeconds, exp: nowSeconds + STAFF_MAX_AGE_SECONDS };
   const body = toBase64Url(encoder.encode(JSON.stringify(payload)));
   return `${body}.${await sign(body, secret)}`;
 }
 
-// The role from a valid, unexpired staff token, otherwise null.
+// The session in a valid, unexpired staff token, otherwise null. Tokens from
+// before the login was added to them are refused: those staff sign in again.
 export async function readStaffToken(
   token: string | undefined,
   secret: string,
   nowSeconds = Math.floor(Date.now() / 1000),
-): Promise<StaffRole | null> {
+): Promise<StaffSession | null> {
   if (!token) return null;
   const [body, signature, ...rest] = token.split('.');
   if (!body || !signature || rest.length) return null;
@@ -42,7 +50,8 @@ export async function readStaffToken(
     const payload = JSON.parse(new TextDecoder().decode(fromBase64Url(body))) as StaffPayload;
     if (payload.role !== 'admin' && payload.role !== 'moderator') return null;
     if (typeof payload.exp !== 'number' || payload.exp <= nowSeconds) return null;
-    return payload.role;
+    if (typeof payload.login !== 'string' || typeof payload.iat !== 'number') return null;
+    return { role: payload.role, login: payload.login, iat: payload.iat };
   } catch {
     return null;
   }
