@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { BRAND_NAME } from '@/src/lib/brand';
+import { BRAND_NAME, INSTAGRAM_URL } from '@/src/lib/brand';
 import { OPERATOR } from '@/src/lib/legal';
 import { pagePreview } from '@/src/lib/seo';
 import { telegramHref } from '@/src/lib/telegram';
@@ -14,14 +14,8 @@ export const metadata = {
   ...pagePreview({ title: `${TITLE} — ${BRAND_NAME}`, description: DESCRIPTION }),
 };
 
-// The people behind the site. A member without a name yet shows as
-// «Участник команды» with a silhouette; add `name`, `role` and a square
-// `photo` in public/team/ when they are known.
-const TEAM: { name?: string; role?: string; photo?: string }[] = [
-  { name: 'Rasuljon Muminov', role: 'Owner', photo: '/team/rasuljon.webp' },
-  {},
-  {},
-];
+// The person shown in «Наша команда».
+const MEMBER = { name: 'Rasuljon Muminov', role: 'Owner', photo: '/team/rasuljon.webp' };
 
 // The project, how it works, and the team.
 export default function AboutPage() {
@@ -80,36 +74,33 @@ export default function AboutPage() {
           <div className="sec-head">
             <h2 id="about-me">Наша команда</h2>
           </div>
-          <div className="team-intro">
-            <p>
-              Мы — небольшая команда из Душанбе. Втроём мы придумали и сделали {BRAND_NAME}, чтобы у художников было
-              своё место, где их работы видят, а у людей — простой способ купить живую картину напрямую у автора.
-            </p>
-            <p>Если у вас есть идея, вопрос или вы хотите выставить свои работы — напишите нам, мы будем рады.</p>
-            {telegram && (
-              <a className="btn btn-tg" href={telegram} target="_blank" rel="noopener noreferrer">
-                Написать нам в Telegram
-              </a>
-            )}
+          <div className="founder">
+            <span className="founder-pic">
+              <Image src={MEMBER.photo} alt={MEMBER.name} width={340} height={340} sizes="170px" />
+            </span>
+            <div className="founder-txt">
+              <h3>{MEMBER.name}</h3>
+              <p className="founder-role">{MEMBER.role}</p>
+              <p>
+                Мы — небольшая команда из Душанбе. Мы придумали и сделали {BRAND_NAME}, чтобы у художников было своё
+                место, где их работы видят, а у людей — простой способ купить живую картину напрямую у автора.
+              </p>
+              <p>
+                Если у вас есть идея, вопрос или вы хотите выставить свои работы — напишите нам, мы будем рады. А ещё
+                подписывайтесь на нас в Instagram — так вы очень нас поддержите.
+              </p>
+              <div className="founder-links">
+                {telegram && (
+                  <a className="btn btn-tg" href={telegram} target="_blank" rel="noopener noreferrer">
+                    Написать нам в Telegram
+                  </a>
+                )}
+                <a className="btn alt ig" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+                  Мы в Instagram
+                </a>
+              </div>
+            </div>
           </div>
-          <ul className="team">
-            {TEAM.map((m, i) => (
-              <li key={m.name ?? i} className="member">
-                <span className="member-pic">
-                  {m.photo ? (
-                    <Image src={m.photo} alt={m.name ?? ''} width={320} height={320} sizes="160px" />
-                  ) : (
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <circle cx="12" cy="8.5" r="4" />
-                      <path d="M4.5 20.5c1.2-4 4-6 7.5-6s6.3 2 7.5 6" />
-                    </svg>
-                  )}
-                </span>
-                <h3>{m.name ?? 'Участник команды'}</h3>
-                {m.role && <p>{m.role}</p>}
-              </li>
-            ))}
-          </ul>
         </section>
 
         <div className="about-cta">
