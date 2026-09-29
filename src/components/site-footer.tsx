@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Logo } from '@/src/components/sanat/logo';
-import { BRAND_NAME, SOURCE_URL } from '@/src/lib/brand';
+import { BRAND_NAME, INSTAGRAM_URL, SOURCE_URL } from '@/src/lib/brand';
 import { LEGAL_DOCS } from '@/src/lib/legal';
 
 export function SiteFooter() {
@@ -10,6 +10,9 @@ export function SiteFooter() {
         <div className="foot">
           <div>
             <Logo />
+            <a className="ig" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+              Мы в Instagram
+            </a>
           </div>
           <nav aria-label="Покупателям">
             <h4>Покупателям</h4>

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { BRAND_NAME } from '@/src/lib/brand';
+import { BRAND_NAME, INSTAGRAM_URL } from '@/src/lib/brand';
 import { OPERATOR } from '@/src/lib/legal';
 import { pagePreview } from '@/src/lib/seo';
 import { telegramHref } from '@/src/lib/telegram';
@@ -85,12 +85,20 @@ export default function AboutPage() {
                 Мы — небольшая команда из Душанбе. Мы придумали и сделали {BRAND_NAME}, чтобы у художников было своё
                 место, где их работы видят, а у людей — простой способ купить живую картину напрямую у автора.
               </p>
-              <p>Если у вас есть идея, вопрос или вы хотите выставить свои работы — напишите нам, мы будем рады.</p>
-              {telegram && (
-                <a className="btn btn-tg" href={telegram} target="_blank" rel="noopener noreferrer">
-                  Написать нам в Telegram
+              <p>
+                Если у вас есть идея, вопрос или вы хотите выставить свои работы — напишите нам, мы будем рады. А ещё
+                подписывайтесь на нас в Instagram — так вы очень нас поддержите.
+              </p>
+              <div className="founder-links">
+                {telegram && (
+                  <a className="btn btn-tg" href={telegram} target="_blank" rel="noopener noreferrer">
+                    Написать нам в Telegram
+                  </a>
+                )}
+                <a className="btn alt ig" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+                  Мы в Instagram
                 </a>
-              )}
+              </div>
             </div>
           </div>
         </section>
