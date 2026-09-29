@@ -6,7 +6,7 @@ import { users, categories, techniques } from '../../src/db/schema';
 
 test('admin creates and renames a category and a technique', async ({ page }) => {
   const adminUser = await signInAsNewUser(page, 'catalog_admin');
-  await signInAsStaff(page, 'moderator');
+  await signInAsStaff(page, 'admin');
 
   const categoryName = `E2E категория ${Date.now()}`;
   const renamedCategoryName = `${categoryName} (переименовано)`;
@@ -33,4 +33,14 @@ test('admin creates and renames a category and a technique', async ({ page }) =>
     await getDb().delete(techniques).where(eq(techniques.name, techniqueName));
     await getDb().delete(users).where(eq(users.id, adminUser.id));
   }
+});
+
+test('a moderator cannot open categories, techniques or staff passwords', async ({ page }) => {
+  await signInAsStaff(page, 'moderator');
+  for (const path of ['/admin/categories', '/admin/techniques', '/admin/staff']) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/admin\/sellers/);
+  }
+  await expect(page.getByRole('link', { name: 'Категории' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Доступы' })).toHaveCount(0);
 });

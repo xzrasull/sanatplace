@@ -3,10 +3,21 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '@/src/db';
 import { users } from '@/src/db/schema';
 import { SESSION_COOKIE, getSessionSecret, readSessionToken } from '@/src/lib/auth/session-token';
-import { STAFF_COOKIE, readStaffToken } from '@/src/lib/auth/staff-token';
+import { STAFF_COOKIE } from '@/src/lib/auth/staff-token';
+import { readStaffSession } from '@/src/lib/auth/staff-accounts';
 
 const isSellerRoute = (path: string) => path.startsWith('/dashboard/seller');
 const isAdminRoute = (path: string) => path.startsWith('/admin');
+// the admin area sections a moderator can't open
+const ADMIN_ONLY = [
+  '/admin/database',
+  '/admin/banners',
+  '/admin/journal',
+  '/admin/categories',
+  '/admin/techniques',
+  '/admin/staff',
+];
+const isAdminOnlyRoute = (path: string) => ADMIN_ONLY.some((prefix) => path.startsWith(prefix));
 const isAuthenticatedRoute = (path: string) =>
   ['/dashboard', '/become-seller', '/choose-role', '/favorites'].some((prefix) => path.startsWith(prefix));
 
@@ -16,12 +27,11 @@ export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   // The admin area is for staff signed in at /sanatadmin (login and password),
-  // not for Telegram accounts. The database editor and the home page banners
-  // are for the admin only.
+  // not for Telegram accounts. Some sections are for the admin only.
   if (isAdminRoute(path)) {
-    const role = await readStaffToken(req.cookies.get(STAFF_COOKIE)?.value, getSessionSecret());
+    const role = (await readStaffSession(req.cookies.get(STAFF_COOKIE)?.value))?.role;
     if (!role) return NextResponse.redirect(new URL('/sanatadmin', req.url));
-    if ((path.startsWith('/admin/database') || path.startsWith('/admin/banners')) && role !== 'admin') {
+    if (isAdminOnlyRoute(path) && role !== 'admin') {
       return NextResponse.redirect(new URL('/admin/sellers', req.url));
     }
     return NextResponse.next();

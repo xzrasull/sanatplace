@@ -6,7 +6,7 @@ import { ReferenceList } from '@/src/components/admin/reference-list';
 import { addTechnique, renameTechniqueAction } from './actions';
 
 export default async function AdminTechniquesPage() {
-  const role = await requireStaff();
+  const role = await requireStaff('admin');
 
   const techniques = await listTechniques(getDb());
 

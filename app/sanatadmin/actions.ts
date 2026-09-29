@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { checkStaffLogin } from '@/src/lib/auth/staff-password';
 import { endStaffSession, startStaffSession } from '@/src/lib/auth/staff';
+import { savedStaffHash } from '@/src/lib/auth/staff-accounts';
 
 // Failed attempts per client address: 5 per 15 minutes. In memory, so it is
 // per server instance, a brake on guessing rather than a wall.
@@ -25,14 +26,14 @@ export async function staffSignIn(formData: FormData) {
 
   const login = String(formData.get('login') ?? '');
   const password = String(formData.get('password') ?? '');
-  const result = await checkStaffLogin(login, password);
+  const result = await checkStaffLogin(login, password, savedStaffHash);
   if (!result.ok) {
     if (result.reason === 'not_configured') redirect('/sanatadmin?error=not_configured');
     recentFailures(ip, now).push(now);
     redirect('/sanatadmin?error=invalid');
   }
   failures.delete(ip);
-  await startStaffSession(result.role);
+  await startStaffSession(result.role, result.login);
   redirect(result.role === 'admin' ? '/admin/database' : '/admin/sellers');
 }
 

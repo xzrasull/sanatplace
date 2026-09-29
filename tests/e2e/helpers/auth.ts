@@ -24,6 +24,6 @@ export async function signOut(page: Page) {
 // Signs the browser in as staff (what /sanatadmin does after checking the
 // login and password), so tests need no staff passwords.
 export async function signInAsStaff(page: Page, role: StaffRole, baseURL = 'http://localhost:3000') {
-  const token = await createStaffToken(role, getSessionSecret());
+  const token = await createStaffToken(role, role === 'admin' ? 'admin' : 'moder', getSessionSecret());
   await page.context().addCookies([{ name: STAFF_COOKIE, value: token, url: baseURL, httpOnly: true, sameSite: 'Strict' }]);
 }

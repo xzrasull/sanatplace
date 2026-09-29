@@ -7,7 +7,7 @@ import { getDb } from '@/src/db';
 import { createCategory, renameCategory } from '@/src/lib/catalog/categories';
 
 export async function addCategory(formData: FormData) {
-  await requireStaff();
+  await requireStaff('admin');
   const name = String(formData.get('name') ?? '').trim();
   if (!name) redirect('/admin/categories');
   await createCategory(getDb(), name);
@@ -15,7 +15,7 @@ export async function addCategory(formData: FormData) {
 }
 
 export async function renameCategoryAction(formData: FormData) {
-  await requireStaff();
+  await requireStaff('admin');
   const id = String(formData.get('id') ?? '').trim();
   const name = String(formData.get('name') ?? '').trim();
   if (!id || !name) redirect('/admin/categories');
