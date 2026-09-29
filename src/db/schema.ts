@@ -188,8 +188,10 @@ export const posts = pgTable(
 // Staff passwords set from the admin area (scrypt hashes, see staff-password.ts).
 // A login without a row here signs in with the hash from its environment
 // variable. Sessions started before `passwordChangedAt` no longer count.
+// RLS with no policies keeps it out of Supabase's public Data API; the app
+// connects as the table owner, which RLS doesn't apply to.
 export const staffAccounts = pgTable('staff_accounts', {
   login: text('login').primaryKey(),
   passwordHash: text('password_hash').notNull(),
   passwordChangedAt: timestamp('password_changed_at').notNull().defaultNow(),
-});
+}).enableRLS();
