@@ -22,6 +22,7 @@ export function SiteFooter() {
           <nav aria-label="Продавцам">
             <h4>Продавцам</h4>
             <Link href="/sell">Стать продавцом</Link>
+            <Link href="/sell/guide">Инструкция для художников</Link>
             <Link href="/sign-in">Войти через Telegram</Link>
             <Link href="/rules/sellers">Правила для продавцов</Link>
           </nav>

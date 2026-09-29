@@ -30,6 +30,14 @@ export default async function SellPage() {
         <section className="sec" aria-labelledby="steps-title">
           <div className="sec-head">
             <h2 id="steps-title">Как начать</h2>
+            <Link className="more" href="/sell/guide">
+              Подробная инструкция{' '}
+              <i>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </i>
+            </Link>
           </div>
           <ol className="steps">
             <li className="step">
