@@ -28,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     { url: `${base}/journal`, changeFrequency: 'daily', priority: 0.7 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${base}/sell/guide`, changeFrequency: 'monthly', priority: 0.4 },
     ...posts.map((p) => ({
       url: `${base}/journal/${p.slug}`,
       lastModified: date(p.changedAt),

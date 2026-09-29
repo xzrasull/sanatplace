@@ -1754,6 +1754,12 @@
     font-size: 1.6rem;
     color: var(--ink);
   }
+  .doc h3 {
+    margin: 20px 0 6px;
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
   .doc p,
   .doc ul,
   .doc ol {
