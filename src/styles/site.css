@@ -1890,6 +1890,16 @@
     color: #5d665f;
     font-size: 0.9rem;
   }
+  .copy .src {
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .copy .src:hover {
+    color: var(--sage-d);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
   .has-buybar ~ .site-footer .copy,
   .stage:has(.buybar) .copy {
     padding-bottom: 110px;
