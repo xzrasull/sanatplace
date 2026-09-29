@@ -2,6 +2,7 @@ import { Cormorant_Garamond } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { Suspense, type ReactNode } from 'react';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { InstantFeedback } from '@/src/components/sanat/instant-feedback';
 import { siteUrl } from '@/src/lib/site-url';
 import { SiteFooter } from '@/src/components/site-footer';
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <SiteFooter />
         </div>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
