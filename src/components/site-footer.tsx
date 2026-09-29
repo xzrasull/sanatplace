@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Logo } from '@/src/components/sanat/logo';
-import { BRAND_NAME } from '@/src/lib/brand';
+import { BRAND_NAME, SOURCE_URL } from '@/src/lib/brand';
 import { LEGAL_DOCS } from '@/src/lib/legal';
 
 export function SiteFooter() {
@@ -37,7 +37,10 @@ export function SiteFooter() {
         </div>
         <div className="copy">
           <span>
-            © {new Date().getFullYear()} {BRAND_NAME} — место для искусства
+            © {new Date().getFullYear()} {BRAND_NAME} — место для искусства ·{' '}
+            <a className="src" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
+              исходный код
+            </a>
           </span>
           <span>
             санъат ·{' '}
