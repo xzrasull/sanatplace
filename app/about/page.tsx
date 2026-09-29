@@ -18,7 +18,7 @@ export const metadata = {
 // «Участник команды» with a silhouette; add `name`, `role` and a square
 // `photo` in public/team/ when they are known.
 const TEAM: { name?: string; role?: string; photo?: string }[] = [
-  { name: 'Расулджон Муминов', role: 'Основатель · разработка', photo: '/team/rasuljon.webp' },
+  { name: 'Rasuljon Muminov', role: 'Owner', photo: '/team/rasuljon.webp' },
   {},
   {},
 ];
