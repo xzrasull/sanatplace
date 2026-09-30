@@ -15,7 +15,7 @@ export const metadata = {
 };
 
 // The person shown in «Наша команда».
-const MEMBER = { name: 'Rasuljon Muminov', role: 'Owner', photo: '/team/rasuljon.webp' };
+const MEMBER = { name: 'Rasuljon Muminov', role: 'Founder', photo: '/team/rasuljon.webp' };
 
 // The project, how it works, and the team.
 export default function AboutPage() {
