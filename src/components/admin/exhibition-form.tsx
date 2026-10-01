@@ -1,7 +1,7 @@
 // src/components/admin/exhibition-form.tsx
 'use client';
 
-import { useActionState, useState } from 'react';
+import { startTransition, useActionState, useState, type FormEvent } from 'react';
 import { Field } from '@/src/components/form/field';
 import { CustomSelect } from '@/src/components/sanat/custom-select';
 import { SubmitButton } from '@/src/components/form/submit-button';
@@ -36,14 +36,22 @@ export function ExhibitionForm({
   exhibition?: Exhibition;
   announcements: { id: string; title: string }[];
 }) {
-  const [state, formAction] = useActionState(action, null);
+  const [state, dispatch, pending] = useActionState(action, null);
   const [title, setTitle] = useState(exhibition?.title ?? '');
   const [slug, setSlug] = useState(exhibition?.slug ?? '');
   const [slugTouched, setSlugTouched] = useState(Boolean(exhibition));
   const [tooBig, setTooBig] = useState(false);
 
+  // Sent from here (not as a form action), so React keeps what was typed when
+  // the server sends back an error.
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    startTransition(() => dispatch(data));
+  };
+
   return (
-    <form action={formAction} className="mt-6 grid max-w-3xl gap-5">
+    <form onSubmit={onSubmit} className="mt-6 grid max-w-3xl gap-5">
       {exhibition && <input type="hidden" name="id" value={exhibition.id} />}
       {state?.error && (
         <p role="alert" className="notice err">
@@ -115,7 +123,7 @@ export function ExhibitionForm({
         <Textarea name="intro" rows={10} maxLength={EXHIBITION_LIMITS.intro} defaultValue={exhibition?.intro ?? ''} />
       </Field>
       <div>
-        <SubmitButton disabled={tooBig}>{exhibition ? 'Сохранить' : 'Создать выставку'}</SubmitButton>
+        <SubmitButton disabled={tooBig || pending}>{exhibition ? 'Сохранить' : 'Создать выставку'}</SubmitButton>
       </div>
     </form>
   );
