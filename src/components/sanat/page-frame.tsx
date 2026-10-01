@@ -11,6 +11,8 @@ function isPublicPage(pathname: string) {
     pathname === '/gallery' ||
     pathname.startsWith('/gallery/') ||
     pathname === '/artists' ||
+    pathname === '/exhibitions' ||
+    pathname.startsWith('/exhibitions/') ||
     pathname === '/favorites' ||
     pathname === '/sell' ||
     pathname === '/sign-in' ||
