@@ -18,6 +18,7 @@ export function SiteFooter() {
             <h4>Покупателям</h4>
             <Link href="/gallery">Каталог</Link>
             <Link href="/artists">Художники</Link>
+            <Link href="/exhibitions">Выставки</Link>
             <Link href="/journal">Афиша и журнал</Link>
             <Link href="/favorites">Wishlist</Link>
             <Link href="/about">О нас</Link>
