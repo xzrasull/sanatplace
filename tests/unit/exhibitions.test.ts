@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { exhibitionPhase, phaseNote } from '../../src/lib/exhibitions/status';
 import { MIN_SHARE, wallShares, workRatio } from '../../src/lib/exhibitions/wall-scale';
-import { parseExhibitionForm, parseHallForm, parseWorkNote } from '../../src/lib/exhibitions/exhibition-form';
+import { parseExhibitionForm, parseHallForm, parseWorkNote, isExhibitionErrorCode } from '../../src/lib/exhibitions/exhibition-form';
 import { todayInDushanbe } from '../../src/lib/journal/post-form';
 
 const form = (fields: Record<string, string>) => {
@@ -101,5 +101,20 @@ describe('parseHallForm and parseWorkNote', () => {
     expect(parseWorkNote(form({ note: '  Ранняя работа. ' }))).toEqual({ ok: true, note: 'Ранняя работа.' });
     expect(parseWorkNote(form({ note: '' }))).toEqual({ ok: true, note: null });
     expect(parseWorkNote(form({ note: 'а'.repeat(301) }))).toEqual({ ok: false, error: 'note' });
+  });
+  it('rejects prototype keys in wallColor', () => {
+    expect(parseHallForm(form({ title: 'Горы', wallColor: 'constructor' }))).toEqual({ ok: false, error: 'wall' });
+  });
+});
+
+describe('isExhibitionErrorCode', () => {
+  it('rejects prototype keys', () => {
+    expect(isExhibitionErrorCode('toString')).toBe(false);
+  });
+  it('accepts valid error codes', () => {
+    expect(isExhibitionErrorCode('dates')).toBe(true);
+  });
+  it('rejects undefined and other types', () => {
+    expect(isExhibitionErrorCode(undefined)).toBe(false);
   });
 });

@@ -22,7 +22,7 @@ export const WALL_COLORS = {
   sky: { label: 'Небо', value: '#dde5ec' },
 } as const;
 export type WallColor = keyof typeof WALL_COLORS;
-const isWallColor = (v: string): v is WallColor => v in WALL_COLORS;
+const isWallColor = (v: string): v is WallColor => Object.hasOwn(WALL_COLORS, v);
 
 export type ExhibitionFields = {
   title: string;
@@ -136,4 +136,4 @@ export const EXHIBITION_ERRORS: Record<ExhibitionErrorCode, string> = {
 };
 
 export const isExhibitionErrorCode = (v: unknown): v is ExhibitionErrorCode =>
-  typeof v === 'string' && v in EXHIBITION_ERRORS;
+  typeof v === 'string' && Object.hasOwn(EXHIBITION_ERRORS, v);
