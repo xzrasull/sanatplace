@@ -1,4 +1,4 @@
-import { Cormorant_Garamond } from 'next/font/google';
+import { Cormorant_Garamond, Nunito_Sans } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { Suspense, type ReactNode } from 'react';
 import { Analytics } from '@vercel/analytics/next';
@@ -11,12 +11,20 @@ import { PageFrame } from '@/src/components/sanat/page-frame';
 import { BRAND_NAME, BRAND_TAGLINE } from '@/src/lib/brand';
 import './globals.css';
 
-// One serif for the whole site. cyrillic-ext carries the Tajik letters (Ғ Ӣ Қ Ӯ Ҳ Ҷ).
+// Serif for the logo and headings, sans for everything else.
+// cyrillic-ext carries the Tajik letters (Ғ Ӣ Қ Ӯ Ҳ Ҷ).
 const cormorant = Cormorant_Garamond({
   weight: ['400', '500', '600', '700'],
   style: ['normal', 'italic'],
   subsets: ['latin', 'cyrillic', 'cyrillic-ext'],
   variable: '--font-cormorant',
+  display: 'swap',
+});
+
+const nunitoSans = Nunito_Sans({
+  weight: ['400', '600', '700'],
+  subsets: ['latin', 'cyrillic', 'cyrillic-ext'],
+  variable: '--font-nunito-sans',
   display: 'swap',
 });
 
@@ -45,7 +53,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ru" className={cormorant.variable}>
+    <html lang="ru" className={`${cormorant.variable} ${nunitoSans.variable}`}>
       <body>
         {/* reads the URL's query, so it waits for the client */}
         <Suspense fallback={null}>

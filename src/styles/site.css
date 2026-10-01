@@ -1,5 +1,5 @@
-/* sanatplace: light gallery look. Sage green, one serif (Cormorant Garamond),
-   pale tiles with framed prints. Tokens live in app/globals.css. */
+/* sanatplace: light gallery look. Sage green, Cormorant Garamond for the logo and
+   headings, Nunito Sans for text, pale tiles with framed prints. Tokens live in app/globals.css. */
 
 @layer components {
   /* ---------- shell ---------- */
@@ -166,7 +166,7 @@
     gap: 10px;
     padding: 14px 10px;
     text-decoration: none;
-    font: 600 1.05rem/1 var(--serif);
+    font: 600 1.05rem/1 var(--sans);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--mute);
@@ -188,7 +188,7 @@
     border-radius: 999px;
     background: var(--sage);
     color: #fff;
-    font: 700 0.72rem/1 var(--serif);
+    font: 700 0.72rem/1 var(--sans);
     letter-spacing: 0;
   }
   .menu-side {
@@ -209,7 +209,7 @@
     width: min(380px, 100%);
   }
   .hsearch label {
-    font: 700 0.72rem/1 var(--serif);
+    font: 700 0.72rem/1 var(--sans);
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--sage);
@@ -258,7 +258,7 @@
     color: #fff;
     text-decoration: none;
     cursor: pointer;
-    font: 700 0.92rem/1.1 var(--serif);
+    font: 700 0.92rem/1.1 var(--sans);
     letter-spacing: 0.02em;
     transition:
       background-color 0.2s,
@@ -356,7 +356,7 @@
     border-radius: 999px;
     background: #fff;
     color: var(--ink);
-    font: 600 0.88rem/1 var(--serif);
+    font: 600 0.88rem/1 var(--sans);
     cursor: pointer;
     text-decoration: none;
     white-space: nowrap;
@@ -394,7 +394,7 @@
   }
   :where(.stage) select,
   :where(.stage) input:not([type='checkbox'], [type='radio'], [type='file'], [type='range']) {
-    font: 500 0.95rem var(--serif);
+    font: 400 0.95rem var(--sans);
     color: var(--ink);
     background: #fff;
     border: 1px solid var(--field-line);
@@ -466,7 +466,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    font: 700 0.78rem/1 var(--serif);
+    font: 700 0.78rem/1 var(--sans);
     color: var(--sage);
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -501,7 +501,7 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    font: 600 0.95rem/1 var(--serif);
+    font: 600 0.95rem/1 var(--sans);
     text-decoration: none;
     color: var(--ink);
   }
@@ -619,7 +619,7 @@
     gap: 20px;
   }
   .hero-eyebrow {
-    font: 700 0.78rem/1 var(--serif);
+    font: 700 0.78rem/1 var(--sans);
     letter-spacing: 0.22em;
     text-transform: uppercase;
     opacity: 0.9;
@@ -792,7 +792,7 @@
     z-index: 2;
     background: rgba(255, 255, 255, 0.92);
     color: var(--ink);
-    font: 700 0.66rem/1 var(--serif);
+    font: 700 0.66rem/1 var(--sans);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     padding: 7px 11px;
@@ -872,7 +872,7 @@
   }
   .meta h3 {
     margin: 0 0 5px;
-    font: 500 1.3rem/1.2 var(--serif);
+    font: 600 1.1rem/1.3 var(--sans);
     color: var(--ink);
     overflow-wrap: anywhere;
   }
@@ -888,7 +888,7 @@
     margin-top: 14px;
     color: var(--ink);
     font-size: 1.2rem;
-    font-weight: 500;
+    font-weight: 600;
   }
   .meta:hover h3 {
     color: var(--sage-d);
@@ -952,7 +952,7 @@
     stroke-linejoin: round;
   }
   .all b {
-    font: 700 0.95rem/1.1 var(--serif);
+    font: 700 0.95rem/1.1 var(--sans);
   }
   .all small {
     color: var(--mute);
@@ -1088,7 +1088,7 @@
   /* the site's own select (custom-select.tsx) */
   .csel {
     position: relative;
-    font: 500 0.95rem var(--serif);
+    font: 400 0.95rem var(--sans);
     color: var(--ink);
     letter-spacing: normal;
     text-transform: none;
@@ -1619,7 +1619,7 @@
   .founder-role {
     margin: 0;
     color: var(--sage);
-    font: 700 0.8rem/1.3 var(--serif);
+    font: 700 0.8rem/1.3 var(--sans);
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
@@ -1769,7 +1769,7 @@
   .doc h3 {
     margin: 20px 0 6px;
     font-size: 1.3rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--ink);
   }
   .doc p,
@@ -1873,7 +1873,7 @@
   }
   .foot h4 {
     margin: 0 0 12px;
-    font: 700 0.8rem/1 var(--serif);
+    font: 700 0.8rem/1 var(--sans);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--sage-d);
@@ -2065,7 +2065,7 @@
     top: 14px;
     background: #fff;
     color: var(--sage-d);
-    font: 700 0.78rem/1 var(--serif);
+    font: 700 0.78rem/1 var(--sans);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     padding: 8px 12px;
@@ -2082,12 +2082,12 @@
   .pdate {
     margin: 0;
     color: var(--sage);
-    font: 700 0.85rem/1.2 var(--serif);
+    font: 700 0.85rem/1.2 var(--sans);
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
   .pmeta h3 {
-    font: 500 1.65rem/1.15 var(--serif);
+    font: 600 1.65rem/1.15 var(--sans);
     color: var(--ink);
   }
   .pmeta:hover h3 {
@@ -2228,7 +2228,7 @@
   }
   .pfacts dt {
     color: var(--sage);
-    font: 700 0.78rem/1 var(--serif);
+    font: 700 0.78rem/1 var(--sans);
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-bottom: 5px;
@@ -2274,7 +2274,7 @@
   .post-body h3 {
     margin: 1.4em 0 0.5em;
     color: var(--ink);
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.15;
   }
   .post-body h2 {
@@ -2581,7 +2581,7 @@
     height: 19px;
   }
   .meta h3 {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
   .meta .by,
   .meta .era {

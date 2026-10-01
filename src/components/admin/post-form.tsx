@@ -281,7 +281,7 @@ export function PostForm({
 
         {dated && (
           <fieldset className="grid gap-5 rounded-sm border border-border p-4">
-            <legend className="px-1 text-sm font-medium">Когда и где</legend>
+            <legend className="px-1 text-sm font-semibold">Когда и где</legend>
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Дата начала">
                 <Input
@@ -316,7 +316,7 @@ export function PostForm({
 
         <div className="grid gap-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm font-medium">Текст (Markdown)</span>
+            <span className="text-sm font-semibold">Текст (Markdown)</span>
             <div role="tablist" aria-label="Текст" className="flex gap-1">
               {(['write', 'preview'] as const).map((t) => (
                 <button

@@ -66,7 +66,7 @@ export default async function AdminArtworksPage({ searchParams }: { searchParams
             её фото — из хранилища. Отменить нельзя.
           </p>
           <form className="mt-4 flex flex-wrap items-end gap-3" role="search" aria-label="Поиск картин">
-            <label className="grid min-w-[14rem] flex-1 gap-1.5 text-sm font-medium">
+            <label className="grid min-w-[14rem] flex-1 gap-1.5 text-sm font-semibold">
               <span>Название или художник</span>
               <Input type="search" name="q" defaultValue={q} />
             </label>
@@ -83,7 +83,7 @@ export default async function AdminArtworksPage({ searchParams }: { searchParams
                 >
                   <ArtworkImage src={a.imageUrl} alt="" className="w-16 shrink-0" sizes="64px" />
                   <div className="min-w-[12rem] flex-1">
-                    <p className="font-medium">{a.title}</p>
+                    <p className="font-semibold">{a.title}</p>
                     <p className="text-sm text-muted-foreground">
                       {a.sellerDisplayName ?? 'Художник без профиля'} · {a.price} TJS
                     </p>
