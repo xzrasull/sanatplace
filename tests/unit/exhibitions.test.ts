@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ExhibitionView } from '../../src/components/exhibitions/exhibition-view';
 import { exhibitionPhase, phaseNote } from '../../src/lib/exhibitions/status';
 import { MIN_SHARE, wallShares, workRatio } from '../../src/lib/exhibitions/wall-scale';
 import { parseExhibitionForm, parseHallForm, parseWorkNote, isExhibitionErrorCode } from '../../src/lib/exhibitions/exhibition-form';
@@ -116,5 +119,32 @@ describe('isExhibitionErrorCode', () => {
   });
   it('rejects undefined and other types', () => {
     expect(isExhibitionErrorCode(undefined)).toBe(false);
+  });
+});
+
+describe('ExhibitionView', () => {
+  const base = {
+    exhibition: {
+      id: '00000000-0000-4000-8000-000000000001',
+      slug: 'gory',
+      title: 'Горы',
+      subtitle: null,
+      coverUrl: 'https://example.com/c.jpg',
+      startsOn: '2026-11-01',
+      endsOn: '2026-11-30',
+      status: 'published' as const,
+      curatorName: null,
+      intro: null,
+    },
+    halls: [],
+    artists: [],
+  };
+  it('says the exposition is being updated when no work is left', () => {
+    const html = renderToStaticMarkup(createElement(ExhibitionView, { view: base, today: '2026-11-10', likes: {}, others: [] }));
+    expect(html).toContain('Экспозиция обновляется');
+  });
+  it('marks a closed exhibition', () => {
+    const html = renderToStaticMarkup(createElement(ExhibitionView, { view: base, today: '2026-12-02', likes: {}, others: [] }));
+    expect(html).toContain('Выставка завершилась 30 ноября');
   });
 });

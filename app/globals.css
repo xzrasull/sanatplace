@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import '../src/styles/site.css';
+@import '../src/styles/exhibitions.css';
 
 /* One light theme only: bind shadcn's `dark:` variant to a class we never set. */
 @custom-variant dark (&:is(.dark *));
