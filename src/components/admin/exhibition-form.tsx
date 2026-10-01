@@ -122,8 +122,13 @@ export function ExhibitionForm({
       <Field label="Кураторский текст">
         <Textarea name="intro" rows={10} maxLength={EXHIBITION_LIMITS.intro} defaultValue={exhibition?.intro ?? ''} />
       </Field>
-      <div>
+      <div className="flex flex-wrap items-center gap-3">
         <SubmitButton disabled={tooBig || pending}>{exhibition ? 'Сохранить' : 'Создать выставку'}</SubmitButton>
+        {pending && (
+          <span role="status" className="text-sm text-muted-foreground">
+            Сохраняем…
+          </span>
+        )}
       </div>
     </form>
   );
