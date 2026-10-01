@@ -36,7 +36,7 @@ export function ExhibitionView({
       number: i + 1,
       title: h.title,
       intro: h.intro ? <MarkdownBody source={h.intro} /> : null,
-      wall: h.wallColor && h.wallColor in WALL_COLORS ? WALL_COLORS[h.wallColor as WallColor].value : null,
+      wall: h.wallColor && Object.hasOwn(WALL_COLORS, h.wallColor) ? WALL_COLORS[h.wallColor as WallColor].value : null,
       works: h.works.map((w, j) => ({ ...w, share: shares[j], ratio: workRatio(w) })),
     };
   });

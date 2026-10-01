@@ -222,6 +222,9 @@
       scroll-snap-type: none;
       padding: 24px 16px 8px;
     }
+    .ex-track > li {
+      width: 100%;
+    }
     .ex-work {
       height: auto;
       width: min(100%, calc(var(--wall-h) * var(--s) * var(--r)));
