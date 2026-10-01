@@ -1,6 +1,6 @@
 // tests/integration/exhibitions.test.ts
 import { describe, it, expect, afterAll } from 'vitest';
-import { eq, like } from 'drizzle-orm';
+import { eq, inArray, like } from 'drizzle-orm';
 import { getDb } from '../../src/db';
 import { artworks, categories, exhibitions, sellerApplications, techniques, users } from '../../src/db/schema';
 import { listReferencedImageUrls } from '../../src/lib/uploads/references';
@@ -18,6 +18,13 @@ import {
   setWorkNote,
   type ExhibitionInput,
 } from '../../src/lib/exhibitions/admin';
+import {
+  getExhibitionPreview,
+  getOpenExhibitionForHome,
+  getPublicExhibition,
+  listOpenExhibitionsWithArtwork,
+  listPublishedExhibitions,
+} from '../../src/lib/exhibitions/queries';
 
 const PREFIX = 'test-ex-';
 
@@ -170,5 +177,58 @@ describe('exhibition admin', () => {
     const found = await searchArtworkChoices(getDb(), 'poisk');
     expect(found.map((w) => w.id)).toEqual([a]);
     expect((await searchArtworkChoices(getDb(), 'Тест выставок студия', 100)).some((w) => w.id === a)).toBe(true);
+  });
+});
+
+describe('exhibition public queries', () => {
+  const today = '2090-06-15';
+
+  it('shows a published exhibition from its first day, never a draft or an upcoming one', async () => {
+    const draft = await exhibition('q-draft', { startsOn: '2090-06-01', endsOn: '2090-06-30' });
+    await exhibition('q-soon', { status: 'published', startsOn: '2090-07-01', endsOn: '2090-07-30' });
+    await exhibition('q-open', { status: 'published', startsOn: '2090-06-15', endsOn: '2090-06-15' });
+
+    expect(await getPublicExhibition(getDb(), `${PREFIX}q-draft`, today)).toBeUndefined();
+    expect(await getPublicExhibition(getDb(), `${PREFIX}q-soon`, today)).toBeUndefined();
+    expect((await getPublicExhibition(getDb(), `${PREFIX}q-open`, today))?.exhibition.slug).toBe(`${PREFIX}q-open`);
+    // the admin's preview sees drafts
+    expect((await getExhibitionPreview(getDb(), draft))?.exhibition.id).toBe(draft);
+
+    // the list has upcoming ones (for «Скоро»), never drafts
+    const slugs = (await listPublishedExhibitions(getDb())).map((e) => e.slug);
+    expect(slugs).toContain(`${PREFIX}q-soon`);
+    expect(slugs).not.toContain(`${PREFIX}q-draft`);
+  });
+
+  it('hides works that left the catalog and halls left empty, keeps sold ones', async () => {
+    const ex = await exhibition('q-view', { status: 'published', startsOn: '2090-06-01', endsOn: '2090-06-30' });
+    const h1 = await hall(ex, 'Полный');
+    const h2 = await hall(ex, 'Опустевший');
+    const shown = await artwork('q-shown', 'published', 100);
+    const sold = await artwork('q-sold', 'sold', 40);
+    const gone = await artwork('q-gone');
+    for (const [h, a] of [[h1, shown], [h1, sold], [h2, gone]] as const) await addWork(getDb(), h, a);
+    // taken off sale after it was hung
+    await getDb().update(artworks).set({ status: 'pending' }).where(eq(artworks.id, gone));
+
+    const view = await getPublicExhibition(getDb(), `${PREFIX}q-view`, today);
+    expect(view?.halls.map((h) => h.title)).toEqual(['Полный']);
+    expect(view?.halls[0].works.map((w) => w.id)).toEqual([shown, sold]);
+    expect(view?.halls[0].works[1].status).toBe('sold');
+    expect(view?.artists).toHaveLength(1);
+
+    // every work gone: no halls at all, the page says so (Task 7)
+    await getDb().update(artworks).set({ status: 'pending' }).where(inArray(artworks.id, [shown, sold]));
+    expect((await getPublicExhibition(getDb(), `${PREFIX}q-view`, today))?.halls).toEqual([]);
+  });
+
+  it('finds the open exhibition for the home page and for an artwork', async () => {
+    const ex = await exhibition('q-home', { status: 'published', startsOn: '2090-06-10', endsOn: '2090-06-20' });
+    const h = await hall(ex, 'Зал');
+    const a = await artwork('q-home-a');
+    await addWork(getDb(), h, a);
+    expect((await getOpenExhibitionForHome(getDb(), today))?.slug).toBeDefined();
+    expect(await listOpenExhibitionsWithArtwork(getDb(), a, today)).toEqual([{ slug: `${PREFIX}q-home`, title: 'Тест' }]);
+    expect(await listOpenExhibitionsWithArtwork(getDb(), a, '2090-06-21')).toEqual([]);
   });
 });
