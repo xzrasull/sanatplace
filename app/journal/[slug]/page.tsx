@@ -6,6 +6,7 @@ import { getDb } from '@/src/db';
 import { adminTelegramLink, signupText } from '@/src/lib/journal/contact';
 import { CATEGORY_NAME, isDated, isOver, isSlug, publishedDate, todayInDushanbe } from '@/src/lib/journal/post-form';
 import { getPublishedPostBySlug, listRelatedPosts } from '@/src/lib/journal/posts';
+import { getExhibitionLinkForPost } from '@/src/lib/exhibitions/queries';
 import { pagePreview, snippet } from '@/src/lib/seo';
 import { MarkdownBody } from '@/src/components/journal/markdown-body';
 import { PostCover, PostGrid } from '@/src/components/journal/post-card';
@@ -48,6 +49,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const dated = isDated(post.category);
   const over = isOver(post, today);
   const related = await listRelatedPosts(getDb(), post);
+  const online = await getExhibitionLinkForPost(getDb(), post.id, today).catch(() => undefined);
   const signup = post.signupUrl ?? adminTelegramLink(signupText(post.title));
   const external = signup ? /^https?:\/\//.test(signup) : false;
 
@@ -104,6 +106,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               </aside>
             )}
             <div className="post-main">
+              {online && (
+                <p>
+                  <Link className="btn" href={`/exhibitions/${online.slug}`}>
+                    Смотреть онлайн-выставку
+                  </Link>
+                </p>
+              )}
               {post.body && <MarkdownBody source={post.body} />}
               {post.artistId && artistName && (
                 <p className="post-artist">

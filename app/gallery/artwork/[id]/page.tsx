@@ -5,6 +5,8 @@ import { cache, type ReactNode } from 'react';
 import { pagePreview, snippet } from '@/src/lib/seo';
 import { getDb } from '@/src/db';
 import { getPublishedArtworkById } from '@/src/lib/artworks/public-queries';
+import { listOpenExhibitionsWithArtwork } from '@/src/lib/exhibitions/queries';
+import { todayInDushanbe } from '@/src/lib/journal/post-form';
 import { telegramHref } from '@/src/lib/telegram';
 import { getCurrentUser } from '@/src/lib/auth/session';
 import { likeInfoFor } from '@/src/lib/likes/likes';
@@ -85,6 +87,7 @@ export default async function ArtworkDetailPage({ params }: { params: Promise<{ 
   if (!artwork) notFound();
 
   const more = await moreByArtist(getDb(), artwork.artistId, artwork.id);
+  const shows = await listOpenExhibitionsWithArtwork(getDb(), artwork.id, todayInDushanbe()).catch(() => []);
   const likes = await likeInfoFor(getDb(), [{ id: artwork.id, sellerId: artwork.artistId }, ...more], viewer?.id ?? null);
   const telegram = telegramHref(artwork.telegram ?? null);
   const categoryHref = `/gallery?categoryId=${encodeURIComponent(artwork.categoryId)}`;
@@ -131,6 +134,11 @@ export default async function ArtworkDetailPage({ params }: { params: Promise<{ 
             <p className="by">
               Художник: <Link href={artistHref}>{artwork.artistName}</Link>
             </p>
+            {shows.map((s) => (
+              <p key={s.slug} className="ex-badge">
+                Участвует в выставке <Link href={`/exhibitions/${s.slug}`}>«{s.title}»</Link>
+              </p>
+            ))}
             {artwork.sold ? <p className="stock sold">Продано</p> : <p className="stock">В наличии</p>}
             <dl className="spec">
               <dt>Размеры</dt>

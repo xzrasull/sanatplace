@@ -240,4 +240,13 @@
       padding: 16px;
     }
   }
+
+  .ex-badge {
+    font-size: 0.9rem;
+    color: var(--mute);
+  }
+  .ex-badge a {
+    color: var(--sage);
+    text-decoration: underline;
+  }
 }
