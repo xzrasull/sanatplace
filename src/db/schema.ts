@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, integer, bigint, boolean, date, pgEnum, primaryKey, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, integer, bigint, boolean, date, pgEnum, primaryKey, index, unique } from 'drizzle-orm/pg-core';
 import { POST_CATEGORIES } from '../lib/journal/categories';
 
 export const roleEnum = pgEnum('role', ['buyer', 'seller', 'admin']);
@@ -184,6 +184,69 @@ export const posts = pgTable(
     index('posts_starts_on_idx').on(t.startsOn),
   ],
 );
+
+// Online exhibitions: curated selections of catalog works, in halls, open
+// between two Dushanbe dates. Only the admin builds them.
+export const exhibitions = pgTable(
+  'exhibitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    slug: text('slug').notNull().unique(),
+    title: text('title').notNull(),
+    subtitle: text('subtitle'),
+    curatorName: text('curator_name'),
+    // Markdown
+    intro: text('intro'),
+    coverUrl: text('cover_url').notNull(),
+    startsOn: date('starts_on').notNull(),
+    endsOn: date('ends_on').notNull(),
+    status: text('status', { enum: ['draft', 'published'] }).notNull().default('draft'),
+    // the journal's announcement, if any
+    postId: uuid('post_id').references(() => posts.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('exhibitions_status_starts_idx').on(t.status, t.startsOn)],
+).enableRLS();
+
+export const exhibitionHalls = pgTable(
+  'exhibition_halls',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    exhibitionId: uuid('exhibition_id')
+      .notNull()
+      .references(() => exhibitions.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull(),
+    title: text('title').notNull(),
+    intro: text('intro'),
+    // a key of WALL_COLORS (exhibition-form.ts); null is the page background
+    wallColor: text('wall_color'),
+  },
+  (t) => [index('exhibition_halls_exhibition_idx').on(t.exhibitionId, t.position)],
+).enableRLS();
+
+// `exhibition_id` repeats the hall's, so a work can be on an exhibition once.
+export const exhibitionWorks = pgTable(
+  'exhibition_works',
+  {
+    hallId: uuid('hall_id')
+      .notNull()
+      .references(() => exhibitionHalls.id, { onDelete: 'cascade' }),
+    artworkId: uuid('artwork_id')
+      .notNull()
+      .references(() => artworks.id, { onDelete: 'cascade' }),
+    exhibitionId: uuid('exhibition_id')
+      .notNull()
+      .references(() => exhibitions.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull(),
+    curatorNote: text('curator_note'),
+  },
+  (t) => [
+    primaryKey({ columns: [t.hallId, t.artworkId] }),
+    unique('exhibition_works_once').on(t.exhibitionId, t.artworkId),
+    index('exhibition_works_artwork_idx').on(t.artworkId),
+  ],
+).enableRLS();
 
 // Staff passwords set from the admin area (scrypt hashes, see staff-password.ts).
 // A login without a row here signs in with the hash from its environment
