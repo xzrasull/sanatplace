@@ -7,7 +7,7 @@
 
 /* Tailwind (cabinets, admin, forms) reads the same tokens as the public pages. */
 @theme inline {
-  --font-sans: var(--serif);
+  --font-sans: var(--sans);
   --font-serif: var(--serif);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -64,6 +64,7 @@
   --shadow: 0 10px 24px rgba(30, 40, 34, 0.16);
   --radius: 6px;
   --serif: var(--font-cormorant), 'Cormorant Garamond', 'Times New Roman', Georgia, serif;
+  --sans: var(--font-nunito-sans), 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* ---- shadcn tokens, mapped onto the palette ---- */
   --background: var(--bg);
@@ -91,14 +92,14 @@
     @apply border-border;
   }
   html {
-    font-size: 112.5%;
+    font-size: 100%;
     background: var(--bg);
   }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--ink);
-    font: 500 1rem/1.5 var(--serif);
+    font: 400 1rem/1.6 var(--sans);
     -webkit-font-smoothing: antialiased;
     overflow-x: clip;
   }
@@ -106,8 +107,16 @@
   h2,
   h3,
   h4 {
-    font-weight: 500;
     line-height: 1.1;
+  }
+  h1,
+  h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+  }
+  h3,
+  h4 {
+    font-weight: 600;
   }
   h1 {
     font-size: clamp(2.1rem, 4.4vw, 3.1rem);

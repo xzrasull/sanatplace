@@ -64,14 +64,14 @@ export default async function AdminJournalPage({
 
       <FilterForm className="mt-6 flex flex-wrap items-end gap-3" role="search" aria-label="Фильтр материалов">
         <CustomSelect
-          className="grid min-w-[12rem] gap-1.5 text-sm font-medium"
+          className="grid min-w-[12rem] gap-1.5 text-sm font-semibold"
           name="c"
           label="Рубрика"
           options={CATEGORY_TABS.map((t) => ({ value: t.value, label: t.label }))}
           defaultValue={category ?? ''}
         />
         <CustomSelect
-          className="grid min-w-[12rem] gap-1.5 text-sm font-medium"
+          className="grid min-w-[12rem] gap-1.5 text-sm font-semibold"
           name="s"
           label="Статус"
           options={[
@@ -81,7 +81,7 @@ export default async function AdminJournalPage({
           ]}
           defaultValue={status ?? ''}
         />
-        <label className="grid min-w-[14rem] flex-1 gap-1.5 text-sm font-medium">
+        <label className="grid min-w-[14rem] flex-1 gap-1.5 text-sm font-semibold">
           <span>Поиск по названию</span>
           <Input type="search" name="q" defaultValue={q} />
         </label>

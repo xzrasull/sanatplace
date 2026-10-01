@@ -10,5 +10,5 @@ const STATUS: Record<string, { label: string; className: string }> = {
 
 export function StatusBadge({ status }: { status: string }) {
   const entry = STATUS[status] ?? { label: status, className: '' };
-  return <Badge className={cn('font-medium', entry.className)}>{entry.label}</Badge>;
+  return <Badge className={cn('font-semibold', entry.className)}>{entry.label}</Badge>;
 }
