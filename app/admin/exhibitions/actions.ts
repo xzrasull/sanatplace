@@ -6,8 +6,21 @@ import { redirect } from 'next/navigation';
 import { requireStaff } from '@/src/lib/auth/staff';
 import { getDb } from '@/src/db';
 import { isUuid } from '@/src/lib/gallery/types';
-import { parseExhibitionForm, type ExhibitionErrorCode } from '@/src/lib/exhibitions/exhibition-form';
-import { deleteExhibition, getExhibition, saveExhibition, setExhibitionStatus } from '@/src/lib/exhibitions/admin';
+import { parseExhibitionForm, parseHallForm, parseWorkNote, type ExhibitionErrorCode } from '@/src/lib/exhibitions/exhibition-form';
+import {
+  addHall,
+  addWork,
+  deleteExhibition,
+  deleteHall,
+  getExhibition,
+  moveHall,
+  moveWork,
+  removeWork,
+  saveExhibition,
+  setExhibitionStatus,
+  setWorkNote,
+  updateHall,
+} from '@/src/lib/exhibitions/admin';
 import { POSTS_BUCKET } from '@/src/lib/uploads/buckets';
 import { dropImages, tryUploadImage } from '@/src/lib/uploads/upload-image';
 
@@ -78,4 +91,83 @@ export async function removeExhibition(formData: FormData) {
   if (gone) await dropImages(POSTS_BUCKET, [gone.coverUrl]);
   exhibitionsChanged(gone?.slug);
   redirect('/admin/exhibitions');
+}
+
+const idOf = (form: FormData, key: string) => {
+  const v = String(form.get(key) ?? '');
+  return isUuid(v) ? v : null;
+};
+const dirOf = (form: FormData): -1 | 1 => (form.get('dir') === 'up' ? -1 : 1);
+
+// Back to the exhibition's page, with a problem in the address if there was one.
+async function backTo(exhibitionId: string | undefined | null, error?: ExhibitionErrorCode): Promise<never> {
+  if (!exhibitionId) redirect('/admin/exhibitions?error=not_found');
+  const ex = await getExhibition(getDb(), exhibitionId);
+  exhibitionsChanged(ex?.slug);
+  redirect(`/admin/exhibitions/${exhibitionId}${error ? `?error=${error}` : ''}#halls`);
+}
+
+export async function addHallAction(formData: FormData) {
+  await requireStaff('admin');
+  const exhibitionId = idOf(formData, 'exhibitionId');
+  const parsed = parseHallForm(formData);
+  if (!parsed.ok) return backTo(exhibitionId, parsed.error);
+  if (!exhibitionId) return backTo(null);
+  const r = await addHall(getDb(), exhibitionId, parsed.fields);
+  return backTo(exhibitionId, r.ok ? undefined : r.reason);
+}
+
+export async function updateHallAction(formData: FormData) {
+  await requireStaff('admin');
+  const hallId = idOf(formData, 'hallId');
+  const exhibitionId = idOf(formData, 'exhibitionId');
+  const parsed = parseHallForm(formData);
+  if (!parsed.ok) return backTo(exhibitionId, parsed.error);
+  return backTo(hallId ? await updateHall(getDb(), hallId, parsed.fields) : null);
+}
+
+export async function deleteHallAction(formData: FormData) {
+  await requireStaff('admin');
+  const hallId = idOf(formData, 'id');
+  return backTo(hallId ? await deleteHall(getDb(), hallId) : null);
+}
+
+export async function moveHallAction(formData: FormData) {
+  await requireStaff('admin');
+  const hallId = idOf(formData, 'hallId');
+  return backTo(hallId ? await moveHall(getDb(), hallId, dirOf(formData)) : null);
+}
+
+export async function addWorkAction(formData: FormData) {
+  await requireStaff('admin');
+  const hallId = idOf(formData, 'hallId');
+  const artworkId = idOf(formData, 'artworkId');
+  const exhibitionId = idOf(formData, 'exhibitionId');
+  if (!hallId || !artworkId) return backTo(exhibitionId, 'not_found');
+  const r = await addWork(getDb(), hallId, artworkId);
+  return backTo(exhibitionId, r.ok ? undefined : r.reason);
+}
+
+export async function moveWorkAction(formData: FormData) {
+  await requireStaff('admin');
+  const hallId = idOf(formData, 'hallId');
+  const artworkId = idOf(formData, 'artworkId');
+  return backTo(hallId && artworkId ? await moveWork(getDb(), hallId, artworkId, dirOf(formData)) : null);
+}
+
+export async function removeWorkAction(formData: FormData) {
+  await requireStaff('admin');
+  const hallId = idOf(formData, 'hallId');
+  const artworkId = idOf(formData, 'artworkId');
+  return backTo(hallId && artworkId ? await removeWork(getDb(), hallId, artworkId) : null);
+}
+
+export async function setWorkNoteAction(formData: FormData) {
+  await requireStaff('admin');
+  const hallId = idOf(formData, 'hallId');
+  const artworkId = idOf(formData, 'artworkId');
+  const exhibitionId = idOf(formData, 'exhibitionId');
+  const parsed = parseWorkNote(formData);
+  if (!parsed.ok) return backTo(exhibitionId, parsed.error);
+  return backTo(hallId && artworkId ? await setWorkNote(getDb(), hallId, artworkId, parsed.note) : null);
 }

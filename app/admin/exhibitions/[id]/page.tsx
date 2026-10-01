@@ -1,4 +1,4 @@
-// app/admin/exhibitions/[id]/page.tsx  (Task 6 добавит редактор залов под формой)
+// app/admin/exhibitions/[id]/page.tsx
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff } from '@/src/lib/auth/staff';
@@ -12,6 +12,7 @@ import { AdminNav } from '@/src/components/admin/admin-nav';
 import { ExhibitionForm } from '@/src/components/admin/exhibition-form';
 import { SubmitButton } from '@/src/components/form/submit-button';
 import { buttonVariants } from '@/src/components/ui/button';
+import { HallsEditor } from './halls-editor';
 import { saveExhibitionAction, setExhibitionStatusAction } from '../actions';
 
 export const metadata = { title: 'Выставка' };
@@ -66,6 +67,11 @@ export default async function EditExhibitionPage({
         </p>
       )}
       <ExhibitionForm action={saveExhibitionAction} exhibition={exhibition} announcements={announcements} />
+      <HallsEditor
+        exhibitionId={exhibition.id}
+        hallSearch={isUuid(sp.hall ?? '') ? sp.hall : undefined}
+        q={(sp.q ?? '').trim().slice(0, 100)}
+      />
     </main>
   );
 }
