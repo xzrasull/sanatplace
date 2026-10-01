@@ -1,17 +1,106 @@
 // tests/integration/exhibitions.test.ts
 import { describe, it, expect, afterAll } from 'vitest';
-import { like } from 'drizzle-orm';
+import { eq, like } from 'drizzle-orm';
 import { getDb } from '../../src/db';
-import { exhibitions } from '../../src/db/schema';
+import { artworks, categories, exhibitions, sellerApplications, techniques, users } from '../../src/db/schema';
 import { listReferencedImageUrls } from '../../src/lib/uploads/references';
+import { testTelegramId } from '../helpers/test-telegram-id';
+import {
+  addHall,
+  addWork,
+  deleteHall,
+  listHallsForAdmin,
+  moveHall,
+  moveWork,
+  removeWork,
+  saveExhibition,
+  searchArtworkChoices,
+  setWorkNote,
+  type ExhibitionInput,
+} from '../../src/lib/exhibitions/admin';
 
 const PREFIX = 'test-ex-';
 
-describe('exhibitions schema', () => {
-  afterAll(async () => {
-    await getDb().delete(exhibitions).where(like(exhibitions.slug, `${PREFIX}%`));
-  });
+// ---------- fixtures ----------
+type Fx = { sellerId: string; categoryId: string; techniqueId: string };
+let fx: Fx | undefined;
 
+async function fixtures(): Promise<Fx> {
+  if (fx) return fx;
+  const [seller] = await getDb()
+    .insert(users)
+    .values({ telegramId: testTelegramId(`test_ex_seller_${Date.now()}`), fullName: 'Ex Test Seller', role: 'seller' })
+    .returning();
+  await getDb().insert(sellerApplications).values({
+    userId: seller.id,
+    displayName: 'Тест выставок студия',
+    bio: 'Био.',
+    telegramContact: '@ex_test',
+    status: 'approved',
+  });
+  const [category] = await getDb().insert(categories).values({ name: `Категория выставок ${Date.now()}` }).returning();
+  const [technique] = await getDb().insert(techniques).values({ name: `Техника выставок ${Date.now()}` }).returning();
+  fx = { sellerId: seller.id, categoryId: category.id, techniqueId: technique.id };
+  return fx;
+}
+
+async function artwork(title: string, status: 'published' | 'sold' | 'pending' = 'published', heightCm = 50) {
+  const f = await fixtures();
+  const [row] = await getDb()
+    .insert(artworks)
+    .values({
+      sellerId: f.sellerId,
+      title,
+      description: 'Описание.',
+      price: 1000,
+      heightCm,
+      widthCm: 40,
+      categoryId: f.categoryId,
+      techniqueId: f.techniqueId,
+      imageUrl: `https://example.com/${PREFIX}${title}.jpg`,
+      status,
+    })
+    .returning();
+  return row.id;
+}
+
+const baseInput: ExhibitionInput = {
+  title: 'Тест',
+  slug: '',
+  subtitle: null,
+  curatorName: null,
+  intro: null,
+  startsOn: '2090-01-01',
+  endsOn: '2090-01-31',
+  postId: null,
+  coverUrl: 'https://example.com/cover.jpg',
+  status: 'draft',
+};
+
+async function exhibition(slug: string, extra: Partial<ExhibitionInput> = {}) {
+  const r = await saveExhibition(getDb(), null, { ...baseInput, slug: PREFIX + slug, ...extra });
+  if (!r.ok) throw new Error(r.reason);
+  return r.id;
+}
+
+async function hall(exhibitionId: string, title: string) {
+  const r = await addHall(getDb(), exhibitionId, { title, intro: null, wallColor: null });
+  if (!r.ok) throw new Error(r.reason);
+  return r.id;
+}
+
+afterAll(async () => {
+  await getDb().delete(exhibitions).where(like(exhibitions.slug, `${PREFIX}%`));
+  if (fx) {
+    await getDb().delete(artworks).where(eq(artworks.sellerId, fx.sellerId));
+    await getDb().delete(sellerApplications).where(eq(sellerApplications.userId, fx.sellerId));
+    await getDb().delete(users).where(eq(users.id, fx.sellerId));
+    await getDb().delete(categories).where(eq(categories.id, fx.categoryId));
+    await getDb().delete(techniques).where(eq(techniques.id, fx.techniqueId));
+  }
+});
+
+describe('exhibitions schema', () => {
   it('keeps exhibition covers among the referenced images', async () => {
     const cover = `https://example.com/${PREFIX}cover-${Date.now()}.jpg`;
     await getDb().insert(exhibitions).values({
@@ -22,5 +111,64 @@ describe('exhibitions schema', () => {
       endsOn: '2090-01-31',
     });
     expect(await listReferencedImageUrls(getDb())).toContain(cover);
+  });
+});
+
+describe('exhibition admin', () => {
+  it('refuses a taken address', async () => {
+    await exhibition('same');
+    expect(await saveExhibition(getDb(), null, { ...baseInput, slug: `${PREFIX}same` })).toEqual({
+      ok: false,
+      reason: 'slug_taken',
+    });
+  });
+
+  it('allows at most five halls and keeps their order when moved', async () => {
+    const ex = await exhibition('halls');
+    const ids = [];
+    for (const t of ['А', 'Б', 'В', 'Г', 'Д']) ids.push(await hall(ex, t));
+    expect(await addHall(getDb(), ex, { title: 'Е', intro: null, wallColor: null })).toEqual({ ok: false, reason: 'too_many' });
+
+    await moveHall(getDb(), ids[1], -1); // Б, А, В, Г, Д
+    await moveHall(getDb(), ids[0], -1); // А, Б, В, Г, Д
+    expect((await listHallsForAdmin(getDb(), ex)).map((h) => h.title)).toEqual(['А', 'Б', 'В', 'Г', 'Д']);
+    await moveHall(getDb(), ids[4], 1); // the last stays last
+    await moveHall(getDb(), ids[2], 1); // В down
+    expect((await listHallsForAdmin(getDb(), ex)).map((h) => h.title)).toEqual(['А', 'Б', 'Г', 'В', 'Д']);
+
+    await deleteHall(getDb(), ids[0]);
+    expect(await hall(ex, 'Е')).toBeTruthy(); // room for one more after a delete
+  });
+
+  it('adds a work once per exhibition, refuses hidden ones, moves and removes', async () => {
+    const ex = await exhibition('works');
+    const h1 = await hall(ex, 'Один');
+    const h2 = await hall(ex, 'Два');
+    const a = await artwork('a');
+    const b = await artwork('b', 'sold');
+    const pending = await artwork('p', 'pending');
+
+    expect(await addWork(getDb(), h1, a)).toEqual({ ok: true, exhibitionId: ex });
+    expect(await addWork(getDb(), h1, b)).toEqual({ ok: true, exhibitionId: ex });
+    expect(await addWork(getDb(), h2, a)).toEqual({ ok: false, reason: 'duplicate' });
+    expect(await addWork(getDb(), h1, pending)).toEqual({ ok: false, reason: 'hidden' });
+
+    await moveWork(getDb(), h1, b, -1);
+    await setWorkNote(getDb(), h1, a, 'Ранняя работа.');
+    let [first] = await listHallsForAdmin(getDb(), ex);
+    expect(first.works.map((w) => w.artworkId)).toEqual([b, a]);
+    expect(first.works[1].curatorNote).toBe('Ранняя работа.');
+
+    await removeWork(getDb(), h1, b);
+    [first] = await listHallsForAdmin(getDb(), ex);
+    expect(first.works.map((w) => w.artworkId)).toEqual([a]);
+  });
+
+  it('finds published and sold works by title or artist, not pending ones', async () => {
+    const a = await artwork('poisk-odin');
+    await artwork('poisk-dva', 'pending');
+    const found = await searchArtworkChoices(getDb(), 'poisk');
+    expect(found.map((w) => w.id)).toEqual([a]);
+    expect((await searchArtworkChoices(getDb(), 'Тест выставок студия', 100)).some((w) => w.id === a)).toBe(true);
   });
 });
