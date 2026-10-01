@@ -23,6 +23,21 @@ function Wall({ hall, onOpen }: { hall: RoomHall; onOpen: (id: string) => void }
     const t = track.current;
     if (t) t.scrollBy({ left: dir * t.clientWidth * 0.8, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   };
+  // A vertical wheel turns the wall sideways while it can still go that way;
+  // at either end the page scrolls as usual. Native listener: React's is passive.
+  useEffect(() => {
+    const t = track.current;
+    if (!t) return;
+    const onWheel = (e: WheelEvent) => {
+      if (t.scrollWidth <= t.clientWidth || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      const max = t.scrollWidth - t.clientWidth;
+      if ((e.deltaY < 0 && t.scrollLeft <= 0) || (e.deltaY > 0 && t.scrollLeft >= max - 1)) return;
+      e.preventDefault();
+      t.scrollLeft += e.deltaY;
+    };
+    t.addEventListener('wheel', onWheel, { passive: false });
+    return () => t.removeEventListener('wheel', onWheel);
+  }, []);
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
