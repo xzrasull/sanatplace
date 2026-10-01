@@ -225,6 +225,9 @@
     .ex-track > li {
       width: 100%;
     }
+    .ex-label {
+      justify-self: center;
+    }
     .ex-work {
       height: auto;
       width: min(100%, calc(var(--wall-h) * var(--s) * var(--r)));
