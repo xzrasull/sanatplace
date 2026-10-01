@@ -2,7 +2,7 @@
 
 import { getCurrentUser } from '@/src/lib/auth/session';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getDb } from '@/src/db';
 import { markArtworkAsSold } from '@/src/lib/artworks/seller-operations';
 
@@ -15,5 +15,6 @@ export async function markAsSold(formData: FormData) {
   if (!artworkId) redirect('/dashboard/seller');
 
   await markArtworkAsSold(getDb(), { artworkId, sellerId: user.id });
+  revalidateTag('exhibitions');
   revalidatePath('/dashboard/seller');
 }

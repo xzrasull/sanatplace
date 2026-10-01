@@ -1,6 +1,8 @@
 import type { Db } from '../../db';
 import { artworks, banners, exhibitions, posts, sellerApplications, users } from '../../db/schema';
 
+// Every image URL the database points at. The tables are small, so they are
+// read whole; used before deleting files, so a shared file is never removed.
 export async function listReferencedImageUrls(db: Db): Promise<string[]> {
   const [a, b, s, u, p, e] = await Promise.all([
     db.select({ url: artworks.imageUrl }).from(artworks),

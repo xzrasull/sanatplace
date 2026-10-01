@@ -45,7 +45,12 @@ const text = (form: FormData, key: string) => {
 };
 const longText = (form: FormData, key: string) => text(form, key).replace(/\r\n/g, '\n');
 const orNull = (s: string) => (s ? s : null);
-const isIsoDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(new Date(`${s}T12:00:00Z`).getTime());
+const isIsoDate = (s: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(`${s}T12:00:00Z`);
+  // an impossible day (02-30) rolls over to another date, so it no longer matches
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+};
 
 export function parseExhibitionForm(
   form: FormData,

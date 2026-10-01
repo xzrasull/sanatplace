@@ -138,7 +138,7 @@ export async function HallsEditor({ exhibitionId, hallSearch, q }: { exhibitionI
             })}
           </ol>
 
-          <form method="get" action={`/admin/exhibitions/${exhibitionId}`} className="flex flex-wrap items-end gap-2">
+          <form method="get" action={`/admin/exhibitions/${exhibitionId}#halls`} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="hall" value={h.id} />
             <Field label={`Найти работу для зала «${h.title}»`} className="min-w-[16rem] flex-1">
               <Input type="search" name="q" defaultValue={hallSearch === h.id ? q : ''} placeholder="Название или художник" />

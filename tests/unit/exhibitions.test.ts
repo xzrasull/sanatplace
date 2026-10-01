@@ -85,6 +85,11 @@ describe('parseExhibitionForm', () => {
     expect(parseExhibitionForm(form({ ...ok, slug: 'Не латиница' }))).toEqual({ ok: false, error: 'slug' });
     expect(parseExhibitionForm(form({ ...ok, postId: 'nope' }))).toEqual({ ok: false, error: 'post' });
   });
+  it('refuses impossible dates and accepts a leap day', () => {
+    expect(parseExhibitionForm(form({ ...ok, startsOn: '2026-02-30' }))).toEqual({ ok: false, error: 'dates' });
+    expect(parseExhibitionForm(form({ ...ok, startsOn: '2026-13-45' }))).toEqual({ ok: false, error: 'dates' });
+    expect(parseExhibitionForm(form({ ...ok, startsOn: '2028-02-29', endsOn: '2028-03-01' })).ok).toBe(true);
+  });
   it('a one-day exhibition is fine', () => {
     expect(parseExhibitionForm(form({ ...ok, endsOn: '2026-11-01' })).ok).toBe(true);
   });

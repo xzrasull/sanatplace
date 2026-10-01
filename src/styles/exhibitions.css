@@ -130,6 +130,7 @@
     padding: 0;
     border: 0;
     background: var(--background);
+    overscroll-behavior: contain;
   }
   .ex-viewer::backdrop {
     background: rgb(0 0 0 / 0.75);

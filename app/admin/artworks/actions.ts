@@ -17,6 +17,7 @@ export async function approveArtwork(formData: FormData) {
   await approveOrRejectArtwork(getDb(), { artworkId, adminUserId: null, decision: 'approve' });
   // the artist hears from the bot; the admin does not wait for Telegram
   after(() => notifyArtworkApproved(getDb(), artworkId));
+  revalidateTag('exhibitions');
   revalidatePath('/admin/artworks');
 }
 
@@ -31,6 +32,7 @@ export async function rejectArtwork(formData: FormData) {
     reason: String(formData.get('reason') || ''),
   });
   after(() => notifyArtworkRejected(getDb(), artworkId));
+  revalidateTag('exhibitions');
   revalidatePath('/admin/artworks');
 }
 
@@ -45,5 +47,6 @@ export async function removeArtwork(formData: FormData) {
   await dropArtworkImages([gone.imageUrl]);
   // the catalog, the artist's page, wishlists, the home rail and banners
   revalidateTag('banners');
+  revalidateTag('exhibitions');
   revalidatePath('/', 'layout');
 }
