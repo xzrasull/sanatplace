@@ -1,6 +1,6 @@
 import { and, desc, eq, ilike, or } from 'drizzle-orm';
 import type { Db } from '../../db';
-import { artworks, categories, techniques, sellerApplications } from '../../db/schema';
+import { artworks, categories, techniques, sellerApplications, users } from '../../db/schema';
 import { decideArtworkOutcome } from './decision';
 
 export async function approveOrRejectArtwork(
@@ -81,4 +81,14 @@ export async function deleteArtwork(db: Db, artworkId: string) {
     .where(eq(artworks.id, artworkId))
     .returning({ imageUrl: artworks.imageUrl, sellerId: artworks.sellerId });
   return gone;
+}
+
+// An artist the admin may add a painting for: an approved seller.
+export async function findApprovedArtist(db: Db, userId: string) {
+  const [artist] = await db
+    .select({ id: sellerApplications.userId, displayName: sellerApplications.displayName })
+    .from(sellerApplications)
+    .innerJoin(users, eq(users.id, sellerApplications.userId))
+    .where(and(eq(sellerApplications.userId, userId), eq(sellerApplications.status, 'approved'), eq(users.role, 'seller')));
+  return artist;
 }

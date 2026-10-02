@@ -24,6 +24,13 @@ export default async function AdminArtworksPage({ searchParams }: { searchParams
   return (
     <main>
       <AdminNav role={role} />
+      {role === 'admin' && (
+        <p className="mb-6">
+          <Link className="btn sm" href="/admin/artworks/new">
+            + Добавить работу за художника
+          </Link>
+        </p>
+      )}
       <h1>Картины на модерации</h1>
       {pending.length === 0 && <p className="mt-4 text-muted-foreground">Нет картин на модерации.</p>}
       <div className="mt-6 grid gap-4">

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requireStaff } from '@/src/lib/auth/staff';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/src/db';
@@ -61,7 +62,14 @@ export default async function AdminSellersPage({ searchParams }: { searchParams:
       <ul className="mt-6 grid max-w-2xl gap-4">
         {artists.map((a) => (
           <li key={a.id} className="rounded-sm bg-card p-5">
-            <h3 className="mb-3 text-xl">{a.displayName}</h3>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-xl">{a.displayName}</h3>
+              {role === 'admin' && (
+                <Link className="btn sm" href={`/admin/artworks/new?seller=${a.id}`}>
+                  + Добавить работу
+                </Link>
+              )}
+            </div>
             <AvatarForm action={setArtistAvatar} name={a.displayName} url={a.avatarUrl} userId={a.id} />
           </li>
         ))}
