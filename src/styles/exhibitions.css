@@ -215,6 +215,99 @@
     list-style: none;
   }
 
+  .ex-mode {
+    display: flex;
+    gap: 8px;
+    padding-top: 8px;
+  }
+  .ex-mode [aria-pressed='true'],
+  .ex-3d-tabs [aria-current='true'] {
+    background: var(--ink);
+    color: var(--background);
+  }
+
+  .ex-3d-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .ex-3d-stage {
+    position: relative;
+    height: min(78svh, 720px);
+    margin-top: 24px;
+    background: var(--wall);
+  }
+  .ex-3d-stage:fullscreen {
+    height: 100%;
+  }
+  .ex-3d-canvas,
+  .ex-3d-canvas canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .ex-3d-canvas canvas {
+    cursor: grab;
+    touch-action: pan-y;
+    outline-offset: -3px;
+  }
+  .ex-3d-canvas canvas:active {
+    cursor: grabbing;
+  }
+  .ex-3d-wait {
+    display: grid;
+    place-items: center;
+    color: var(--mute);
+  }
+  .ex-3d-hint {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    max-width: calc(100% - 80px);
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    background: rgb(255 255 255 / 0.8);
+    pointer-events: none;
+  }
+  .ex-3d-full {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    font-size: 1.2rem;
+  }
+  .ex-3d-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: start;
+    gap: 16px;
+    padding-top: 20px;
+    min-height: 120px;
+  }
+  .ex-3d-bar .ex-label {
+    max-width: 48ch;
+  }
+  .ex-3d-none {
+    color: var(--mute);
+    font-size: 0.9rem;
+  }
+  .ex-3d-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  @media (hover: none) {
+    .ex-3d-keys {
+      display: none;
+    }
+  }
+
   @media (max-width: 767px) {
     .ex-track {
       --wall-h: 70svh;
@@ -235,6 +328,9 @@
     }
     .ex-arrow {
       display: none;
+    }
+    .ex-3d-stage {
+      height: 68svh;
     }
     .ex-viewer-in {
       grid-template-columns: 1fr;

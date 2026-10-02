@@ -116,6 +116,20 @@ test('the admin builds an exhibition and a visitor walks through it', async ({ p
   await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Вершины' })).toBeVisible();
 
+  // the hall opens as a 3D room; the label under it names the work in front
+  await expect(page.getByRole('img', { name: /Зал 1 «Вершины» в 3D/ })).toBeVisible({ timeout: 20000 });
+  const bar = page.locator('.ex-3d-bar');
+  await expect(bar.getByText(new RegExp(`${works[0].title}|${works[1].title}`))).toBeVisible({ timeout: 10000 });
+  await bar.getByRole('button', { name: 'Подробнее' }).click();
+  await expect(page).toHaveURL(/work=/);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
+
+  // or as a wall, and the choice is remembered
+  await page.getByRole('button', { name: 'Стеной' }).click();
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Стеной' })).toHaveAttribute('aria-pressed', 'true');
+
   // the big canvas hangs taller than the study
   const big = page.getByRole('button', { name: new RegExp(`Открыть: ${works[0].title}`) });
   const small = page.getByRole('button', { name: new RegExp(`Открыть: ${works[1].title}`) });
@@ -185,7 +199,8 @@ test('a closed exhibition stays open to visitors with a notice; an upcoming one 
 
   await page.goto(`/exhibitions/${closed.slug}`);
   await expect(page.getByText(/Выставка завершилась/)).toBeVisible();
-  await expect(page.getByRole('button', { name: new RegExp(`Открыть: ${works[0].title}`) })).toBeVisible();
+  // the one work hangs facing the entrance, so its label shows at once
+  await expect(page.locator('.ex-3d-bar').getByText(works[0].title)).toBeVisible({ timeout: 20000 });
 
   await page.goto('/exhibitions');
   await expect(page.getByText(`E2E Будущая ${stamp}`)).toBeVisible();

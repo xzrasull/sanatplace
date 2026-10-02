@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { ExhibitionView } from '../../src/components/exhibitions/exhibition-view';
 import { exhibitionPhase, phaseNote } from '../../src/lib/exhibitions/status';
 import { MIN_SHARE, wallShares, workRatio } from '../../src/lib/exhibitions/wall-scale';
+import { roomLayout, type Hung, type RoomLayout } from '../../src/lib/exhibitions/room-layout';
 import { parseExhibitionForm, parseHallForm, parseWorkNote, isExhibitionErrorCode } from '../../src/lib/exhibitions/exhibition-form';
 import { todayInDushanbe } from '../../src/lib/journal/post-form';
 
@@ -151,5 +152,46 @@ describe('ExhibitionView', () => {
   it('marks a closed exhibition', () => {
     const html = renderToStaticMarkup(createElement(ExhibitionView, { view: base, today: '2026-12-02', likes: {}, others: [] }));
     expect(html).toContain('Выставка завершилась 30 ноября');
+  });
+});
+
+describe('roomLayout', () => {
+  const works = (n: number, heightCm = 80, ratio = 0.8) => Array.from({ length: n }, (_, i) => ({ id: `w${i}`, heightCm, ratio }));
+  // which wall a work hangs on, and where along it
+  const onSideWall = (h: Hung) => Math.abs(Math.abs(h.rotY) - Math.PI / 2) < 0.01;
+  const along = (h: Hung) => (onSideWall(h) ? h.z : h.x);
+
+  it('a few works fit the smallest room, on the far wall, in real size', () => {
+    const l = roomLayout(works(2, 150, 2 / 3));
+    expect([l.width, l.depth]).toEqual([7, 5]);
+    expect(l.works.map((w) => w.id)).toEqual(['w0', 'w1']);
+    expect(l.works.every((w) => w.z < -2.4 && w.rotY === 0)).toBe(true);
+    expect(l.works[0].h).toBeCloseTo(1.5);
+    expect(l.works[0].w).toBeCloseTo(1);
+  });
+
+  it('many works grow the room; none overlap or leave their wall, and the visitor stands inside', () => {
+    const many = [...works(25), ...works(5, 200, 1.5)].map((w, i) => ({ ...w, id: `w${i}` }));
+    const l: RoomLayout = roomLayout(many);
+    expect(l.width).toBeGreaterThan(7);
+    expect(l.works.map((w) => w.id)).toEqual(many.map((w) => w.id));
+    const byWall = new Map<string, Hung[]>();
+    for (const h of l.works) byWall.set(h.rotY.toFixed(2), [...(byWall.get(h.rotY.toFixed(2)) ?? []), h]);
+    for (const hung of byWall.values()) {
+      const len = onSideWall(hung[0]) ? l.depth : l.width;
+      const spans = hung.map((h) => [along(h) - h.w / 2, along(h) + h.w / 2]).sort((a, b) => a[0] - b[0]);
+      expect(spans[0][0]).toBeGreaterThanOrEqual(-len / 2);
+      expect(spans.at(-1)![1]).toBeLessThanOrEqual(len / 2);
+      for (let i = 1; i < spans.length; i++) expect(spans[i][0]).toBeGreaterThan(spans[i - 1][1]);
+    }
+    for (const h of l.works) {
+      expect(Math.abs(h.standX)).toBeLessThanOrEqual(l.width / 2);
+      expect(Math.abs(h.standZ)).toBeLessThanOrEqual(l.depth / 2);
+      expect(h.y + h.h / 2).toBeLessThan(l.height);
+    }
+  });
+
+  it('an empty hall is the smallest room', () => {
+    expect(roomLayout([])).toMatchObject({ width: 7, depth: 5, works: [] });
   });
 });

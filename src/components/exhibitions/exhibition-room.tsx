@@ -4,18 +4,30 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
 import type { WallWork } from '@/src/lib/exhibitions/queries';
 import type { LikeInfo } from '@/src/lib/likes/likes';
 import { prefersReducedMotion } from '@/src/lib/sanat/reveal';
 import { isStorageUrl } from '@/src/lib/uploads/buckets';
 import { LikeButton } from '@/src/components/likes/like-button';
+import { ExhibitionStage } from './exhibition-stage';
 import { WorkLabel } from './work-label';
 
 export type RoomWork = WallWork & { share: number; ratio: number };
 export type RoomHall = { id: string; number: number; title: string; intro: ReactNode; wall: string | null; works: RoomWork[] };
 
 const GUEST: LikeInfo = { count: 0, liked: false, state: 'guest' };
+const MODE_KEY = 'ex-mode';
+type Mode = '3d' | 'wall';
+
+const hasWebGL = () => {
+  try {
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') ?? c.getContext('webgl'));
+  } catch {
+    return false;
+  }
+};
 
 function Wall({ hall, onOpen }: { hall: RoomHall; onOpen: (id: string) => void }) {
   const track = useRef<HTMLUListElement>(null);
@@ -79,7 +91,7 @@ function Wall({ hall, onOpen }: { hall: RoomHall; onOpen: (id: string) => void }
   );
 }
 
-// All halls with their walls, and the work viewer. The open work lives in the
+// The halls, as a 3D room (where WebGL works) or as walls, and the work viewer. The open work lives in the
 // address (?work=<id>), so it can be shared; Back and Escape close it.
 export function ExhibitionRoom({ halls, likes }: { halls: RoomHall[]; likes: Record<string, LikeInfo> }) {
   const all = halls.flatMap((h) => h.works);
@@ -89,6 +101,24 @@ export function ExhibitionRoom({ halls, likes }: { halls: RoomHall[]; likes: Rec
   const dialog = useRef<HTMLDialogElement>(null);
   // opened here (so Back undoes it) rather than arriving with ?work=
   const pushed = useRef(false);
+  const [mode, setMode] = useState<Mode>('3d');
+  const [webgl, setWebgl] = useState(true);
+
+  useEffect(() => {
+    const ok = hasWebGL();
+    setWebgl(ok);
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(MODE_KEY);
+    } catch {}
+    if (!ok || saved === 'wall') setMode('wall');
+  }, []);
+  const choose = (m: Mode) => {
+    setMode(m);
+    try {
+      localStorage.setItem(MODE_KEY, m);
+    } catch {}
+  };
 
   useEffect(() => {
     const d = dialog.current;
@@ -117,7 +147,18 @@ export function ExhibitionRoom({ halls, likes }: { halls: RoomHall[]; likes: Rec
 
   return (
     <>
-      {halls.map((h) => (
+      {webgl && halls.length > 0 && (
+        <div className="wrap ex-mode" role="group" aria-label="Как смотреть выставку">
+          <button type="button" className="btn sm" aria-pressed={mode === '3d'} onClick={() => choose('3d')}>
+            3D-зал
+          </button>
+          <button type="button" className="btn sm" aria-pressed={mode === 'wall'} onClick={() => choose('wall')}>
+            Стеной
+          </button>
+        </div>
+      )}
+      {mode === '3d' && halls.length > 0 && <ExhibitionStage halls={halls} onOpen={open} />}
+      {mode === 'wall' && halls.map((h) => (
         <section
           key={h.id}
           className="ex-hall"
@@ -157,12 +198,12 @@ export function ExhibitionRoom({ halls, likes }: { halls: RoomHall[]; likes: Rec
                 {work.status === 'sold' ? 'Подробнее' : 'Подробнее и купить'}
               </Link>
               <div className="ex-viewer-nav">
-                <button type="button" className="btn ghost sm" disabled={index <= 0} onClick={() => show(all[index - 1].id)}>
+                <button type="button" className="btn sm" disabled={index <= 0} onClick={() => show(all[index - 1].id)}>
                   ← Предыдущая
                 </button>
                 <button
                   type="button"
-                  className="btn ghost sm"
+                  className="btn sm"
                   disabled={index >= all.length - 1}
                   onClick={() => show(all[index + 1].id)}
                 >
