@@ -3,6 +3,7 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { HallData } from '@/src/lib/exhibitions/hall-data';
 import { roomLayout } from '@/src/lib/exhibitions/room-layout';
@@ -23,6 +24,7 @@ export function ExhibitionHall({ title, back, halls, start }: { title: string; b
   const [focus, setFocus] = useState(-1);
   const [canFull, setCanFull] = useState(false);
   const [touched, setTouched] = useState(false); // the hint goes once the visitor has moved
+  const router = useRouter();
   const room = useRef<HTMLDivElement>(null);
   const api = useRef<HallApi | null>(null);
   const hall = halls[n];
@@ -61,7 +63,18 @@ export function ExhibitionHall({ title, back, halls, start }: { title: string; b
         label={`Зал ${hall.number} «${hall.title}» в 3D: работ — ${hall.works.length}`}
         onFocus={setFocus}
         onReady={(a) => (api.current = a)}
+        onMore={(i) => router.push(`/gallery/artwork/${hall.works[i].id}`)}
       />
+      {/* the labels on the walls, for the keyboard and screen readers */}
+      <ul className="sr-only" aria-label="Работы зала">
+        {hall.works.map((w) => (
+          <li key={w.id}>
+            <Link href={`/gallery/artwork/${w.id}`}>
+              Подробнее: {w.title}, {w.artistName}
+            </Link>
+          </li>
+        ))}
+      </ul>
 
       <header className="ex-room-top">
         <Link className="ex-room-btn" href={back}>

@@ -231,62 +231,10 @@
     }
   }
 
-  /* the museum label under each work, moved by the 3D scene */
-  .ex-tags {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    overflow: hidden;
-    pointer-events: none;
-  }
-  .ex-tag {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: grid;
-    justify-items: center;
-    gap: 2px;
-    width: max-content;
-    max-width: 260px;
-    padding: 10px 14px 12px;
-    background: #fff;
-    box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
-    text-align: center;
-    transform-origin: 0 0;
-    pointer-events: auto;
-    will-change: transform;
-  }
-  .ex-tag-t {
-    font-weight: 700;
-    font-size: 0.95rem;
-    line-height: 1.25;
-  }
-  .ex-tag-a {
-    font-size: 0.85rem;
-    color: var(--mute);
-  }
-  .ex-tag-more {
-    margin-top: 6px;
-    padding: 6px 14px;
-    border-radius: 999px;
-    background: var(--sage);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-decoration: none;
-  }
-  .ex-tag-more:hover {
-    background: var(--sage-d);
-  }
-
   @media (max-width: 767px) {
     .ex-room-ht,
     .ex-room-ex {
       display: none;
-    }
-    .ex-tag {
-      max-width: 200px;
-      padding: 8px 10px 10px;
     }
   }
 

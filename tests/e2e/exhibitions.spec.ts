@@ -124,15 +124,15 @@ test('the admin builds an exhibition and a visitor walks through it', async ({ p
   const room = (await page.locator('.ex-room').boundingBox())!;
   expect([room.width, room.height]).toEqual([viewport.width, viewport.height]);
 
-  // each work has its label on the wall; no pop-up card any more
-  const label = page.locator('.ex-tag').filter({ hasText: works[0].title });
-  await expect(label).toBeVisible({ timeout: 10000 });
-  await expect(page.locator('.ex-tag').filter({ hasText: works[1].title })).toBeVisible();
+  // the labels are painted on the walls; for the keyboard each work has a link
   await page.getByRole('button', { name: /(К первой|Следующая) работ/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  const more = page.getByRole('link', { name: new RegExp(`Подробнее: ${works[0].title}`) });
+  await expect(more).toHaveAttribute('href', `/gallery/artwork/${works[0].id}`);
+  await expect(page.getByRole('link', { name: new RegExp(`Подробнее: ${works[1].title}`) })).toHaveCount(1);
 
   // through to the artwork page
-  await label.getByRole('link', { name: 'Подробнее' }).click();
+  await more.press('Enter');
   await expect(page).toHaveURL(new RegExp(`/gallery/artwork/${works[0].id}`));
   await expect(page.getByText(`Участвует в выставке «${title}»`)).toBeVisible();
 });
@@ -178,8 +178,8 @@ test('a closed exhibition stays open to visitors with a notice; an upcoming one 
   await page.goto(`/exhibitions/${closed.slug}`);
   await expect(page.getByText(/Выставка завершилась/)).toBeVisible();
   await page.getByRole('link', { name: 'Войти в зал →' }).click();
-  // the one work hangs facing the entrance, so its label shows at once
-  await expect(page.locator('.ex-tag').filter({ hasText: works[0].title })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole('img', { name: /Зал 1 «Архив» в 3D/ })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole('link', { name: new RegExp(`Подробнее: ${works[0].title}`) })).toHaveCount(1);
 
   await page.goto('/exhibitions');
   await expect(page.getByText(`E2E Будущая ${stamp}`)).toBeVisible();

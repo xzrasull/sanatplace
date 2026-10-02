@@ -1,12 +1,12 @@
 // src/components/exhibitions/hall-3d.tsx
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { EYE, type RoomLayout } from '@/src/lib/exhibitions/room-layout';
 import { prefersReducedMotion } from '@/src/lib/sanat/reveal';
 import { isStorageUrl } from '@/src/lib/uploads/buckets';
+import { LABEL_H, LABEL_W, drawLabel, type Box } from './wall-label';
 
 export type HallApi = { walkTo: (index: number) => void };
 export type HallWork = { id: string; title: string; artistName: string; imageUrl: string };
@@ -18,6 +18,7 @@ type Props = {
   label: string;
   onFocus: (index: number) => void; // the work in front of the visitor, or -1
   onReady: (api: HallApi) => void;
+  onMore: (index: number) => void; // the «Подробнее» on a work's label
 };
 
 const SPEED = 2.4; // m/s
@@ -31,16 +32,13 @@ const textureUrl = (src: string) => (isStorageUrl(src) ? `/_next/image?url=${enc
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 const angleTo = (from: number, to: number) => from + Math.atan2(Math.sin(to - from), Math.cos(to - from));
 
-const TAG_RANGE = 8; // m: labels further away are hidden
-
-// One hall as a room the visitor walks through, with a label under each work.
-// Nothing is drawn while nothing moves: a frame is asked for on input and while
-// a walk lasts. The labels are HTML laid over the canvas and moved each frame.
-export default function Hall3D({ layout, works: items, wall, label, onFocus, onReady }: Props) {
+// One hall as a room the visitor walks through, with a label painted on the
+// wall under each work. Nothing is drawn while nothing moves: a frame is asked
+// for on input and while a walk lasts.
+export default function Hall3D({ layout, works: items, wall, label, onFocus, onReady, onMore }: Props) {
   const box = useRef<HTMLDivElement>(null);
-  const tags = useRef<(HTMLDivElement | null)[]>([]);
-  const cb = useRef({ onFocus, onReady });
-  cb.current = { onFocus, onReady };
+  const cb = useRef({ onFocus, onReady, onMore });
+  cb.current = { onFocus, onReady, onMore };
 
   useEffect(() => {
     const host = box.current;
@@ -104,6 +102,35 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
       return add(plane, mat, [w.w, w.h, 1], [w.x, w.y, w.z], r);
     });
 
+    // the labels, a little off the wall under each work; drawn once the fonts are in
+    const textures: THREE.Texture[] = [];
+    const buttons: Box[] = [];
+    const labels = works.map((w) => {
+      const mat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+      mats.push(mat);
+      const off = 0.02; // the photo is 3 cm off the wall, the label 1 cm
+      const y = w.y - w.h / 2 - 0.1 - LABEL_H / 2;
+      return add(plane, mat, [LABEL_W, LABEL_H, 1], [w.x - Math.sin(w.rotY) * off, y, w.z - Math.cos(w.rotY) * off], [0, w.rotY, 0]);
+    });
+    void document.fonts.ready.then(() => {
+      if (dead) return;
+      labels.forEach((m, i) => {
+        const { canvas: pic, more } = drawLabel(items[i].title, items[i].artistName);
+        const tex = new THREE.CanvasTexture(pic);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+        textures.push(tex);
+        buttons[i] = more;
+        Object.assign(m.material, { map: tex, opacity: 1, needsUpdate: true });
+      });
+      invalidate();
+    });
+    const onButton = (hit: THREE.Intersection) => {
+      const b = buttons[labels.indexOf(hit.object as (typeof labels)[number])];
+      const uv = hit.uv;
+      return !!b && !!uv && uv.x >= b.u0 - 0.02 && uv.x <= b.u1 + 0.02 && uv.y >= b.v0 - 0.04 && uv.y <= b.v1 + 0.04;
+    };
+
     // the visitor
     const pos = new THREE.Vector3(0, EYE, D / 2 - 1.5);
     let yaw = 0;
@@ -140,27 +167,6 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
       if (best !== focus) cb.current.onFocus((focus = best));
     };
 
-    // each label hangs just under its work, smaller further off
-    const at = new THREE.Vector3();
-    let [cw, ch] = [1, 1];
-    const placeTags = () => {
-      works.forEach((w, i) => {
-        const el = tags.current[i];
-        if (!el) return;
-        const [nx, nz] = [Math.sin(w.rotY), Math.cos(w.rotY)];
-        at.set(w.x + nx * 0.05, w.y - w.h / 2 - 0.08, w.z + nz * 0.05);
-        const dist = at.distanceTo(pos);
-        const facing = nx * (pos.x - at.x) + nz * (pos.z - at.z) > 0.2;
-        at.project(camera);
-        const shown = facing && dist < TAG_RANGE && at.z < 1 && Math.abs(at.x) < 1.1 && Math.abs(at.y) < 1.1;
-        el.style.visibility = shown ? 'visible' : 'hidden';
-        if (!shown) return;
-        const k = Math.min(1.1, Math.max(0.6, 3 / dist));
-        el.style.opacity = String(Math.min(1, (TAG_RANGE - dist) / 1.5));
-        el.style.transform = `translate(${((at.x + 1) / 2) * cw}px, ${((1 - at.y) / 2) * ch}px) scale(${k}) translateX(-50%)`;
-      });
-    };
-
     const tick = (now: number) => {
       frame = 0;
       if (dead) return;
@@ -189,7 +195,6 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
       }
       place();
       renderer.render(scene, camera);
-      placeTags();
       findFocus();
       if (moving) frame = requestAnimationFrame(tick);
       else last = 0;
@@ -215,13 +220,13 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
       if (!w) return;
       const [dx, dz] = [w.x - w.standX, w.z - w.standZ];
       // aimed a little below the middle, so the label under the work is in view too
-      walkTo(w.standX, w.standZ, Math.atan2(-dx, -dz), Math.atan2(w.y - w.h * 0.2 - 0.15 - EYE, Math.hypot(dx, dz)));
+      walkTo(w.standX, w.standZ, Math.atan2(-dx, -dz), Math.atan2(w.y - w.h * 0.25 - 0.2 - EYE, Math.hypot(dx, dz)));
     };
     cb.current.onReady({ walkTo: walkToWork });
 
     // size follows the box
     const resize = () => {
-      [cw, ch] = [host.clientWidth, host.clientHeight];
+      const [cw, ch] = [host.clientWidth, host.clientHeight];
       if (!cw || !ch) return;
       renderer.setSize(cw, ch, false);
       camera.aspect = cw / ch;
@@ -236,7 +241,6 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
     // photos, nearest first, three at a time
     const loader = new THREE.TextureLoader();
     loader.setCrossOrigin('anonymous');
-    const textures: THREE.Texture[] = [];
     const queue = works.map((_, i) => i).sort((a, b) => Math.hypot(works[a].x - pos.x, works[a].z - pos.z) - Math.hypot(works[b].x - pos.x, works[b].z - pos.z));
     const next = () => {
       const i = queue.shift();
@@ -271,8 +275,20 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
       canvas.setPointerCapture(e.pointerId);
       walk = null;
     };
+    const aim = (e: PointerEvent) => {
+      const r = canvas.getBoundingClientRect();
+      ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+    };
     const move = (e: PointerEvent) => {
-      if (!drag) return;
+      if (!drag) {
+        // a hand over a label's button
+        if (e.pointerType !== 'mouse') return;
+        aim(e);
+        const hit = ray.intersectObjects(labels, false)[0];
+        canvas.style.cursor = hit && onButton(hit) ? 'pointer' : '';
+        return;
+      }
       const [dx, dy] = [e.clientX - drag.x, e.clientY - drag.y];
       drag.moved += Math.abs(dx) + Math.abs(dy);
       [drag.x, drag.y] = [e.clientX, e.clientY];
@@ -285,12 +301,12 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
       const d = drag;
       drag = null;
       if (!d || d.moved > 6) return;
-      const r = canvas.getBoundingClientRect();
-      ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-      ray.setFromCamera(ndc, camera);
-      const hit = ray.intersectObjects([...paintings, floor], false)[0];
+      aim(e);
+      const hit = ray.intersectObjects([...paintings, ...labels, floor], false)[0];
       if (!hit) return;
-      const i = paintings.indexOf(hit.object as (typeof paintings)[number]);
+      const label = labels.indexOf(hit.object as (typeof labels)[number]);
+      if (label >= 0 && onButton(hit)) return cb.current.onMore(label);
+      const i = label >= 0 ? label : paintings.indexOf(hit.object as (typeof paintings)[number]);
       if (i < 0) walkTo(hit.point.x, hit.point.z);
       else walkToWork(i);
     };
@@ -331,19 +347,5 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
     };
   }, [layout, items, wall, label]);
 
-  return (
-    <div ref={box} className="ex-3d-canvas">
-      <div className="ex-tags">
-        {items.map((w, i) => (
-          <div key={w.id} ref={(el) => void (tags.current[i] = el)} className="ex-tag" style={{ visibility: 'hidden' }}>
-            <p className="ex-tag-t">{w.title}</p>
-            <p className="ex-tag-a">{w.artistName}</p>
-            <Link className="ex-tag-more" href={`/gallery/artwork/${w.id}`}>
-              Подробнее
-            </Link>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <div ref={box} className="ex-3d-canvas" />;
 }

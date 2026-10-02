@@ -82,7 +82,7 @@ export function roomLayout(works: { id: string; heightCm: number; ratio: number 
       hung.push({
         id: works[i].id,
         x,
-        y: Math.max(1.5, h / 2 + 0.35),
+        y: Math.max(1.55, h / 2 + 0.75), // room for the label under it
         z,
         rotY: Math.atan2(wall.nx, wall.nz),
         w,
