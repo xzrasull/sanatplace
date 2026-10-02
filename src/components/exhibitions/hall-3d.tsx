@@ -8,7 +8,8 @@ import { prefersReducedMotion } from '@/src/lib/sanat/reveal';
 import { isStorageUrl } from '@/src/lib/uploads/buckets';
 import { LABEL_H, LABEL_W, drawLabel, type Box } from './wall-label';
 
-export type HallApi = { walkTo: (index: number) => void };
+// walkTo: to a work; hold: a movement key pressed or let go ('w', 's', 'arrowleft', …)
+export type HallApi = { walkTo: (index: number) => void; hold: (key: string, down: boolean) => void };
 export type HallWork = { id: string; title: string; artistName: string; imageUrl: string };
 
 type Props = {
@@ -24,6 +25,7 @@ type Props = {
 const SPEED = 2.4; // m/s
 const TURN = 1.8; // rad/s
 const MAX_PITCH = 0.6;
+const WALL_GAP = 1.5; // m
 
 // Stored photos come through Next's optimizer (a ~1000 px webp/avif from our
 // origin); other addresses are loaded as they are.
@@ -143,8 +145,9 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
     let dead = false;
 
     const clampToRoom = () => {
-      pos.x = Math.min(W / 2 - 0.4, Math.max(-W / 2 + 0.4, pos.x));
-      pos.z = Math.min(D / 2 - 0.4, Math.max(-D / 2 + 0.4, pos.z));
+      // never closer to a wall than WALL_GAP, so a work is not pressed against the eye
+      pos.x = Math.min(W / 2 - WALL_GAP, Math.max(-W / 2 + WALL_GAP, pos.x));
+      pos.z = Math.min(D / 2 - WALL_GAP, Math.max(-D / 2 + WALL_GAP, pos.z));
     };
     const place = () => {
       camera.position.copy(pos);
@@ -204,6 +207,8 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
     };
 
     const walkTo = (x: number, z: number, y2 = yaw, p2 = pitch) => {
+      x = Math.min(W / 2 - WALL_GAP, Math.max(-W / 2 + WALL_GAP, x));
+      z = Math.min(D / 2 - WALL_GAP, Math.max(-D / 2 + WALL_GAP, z));
       const target: [number, number, number, number] = [x, z, angleTo(yaw, y2), p2];
       if (prefersReducedMotion()) {
         [pos.x, pos.z, yaw, pitch] = target;
@@ -222,7 +227,13 @@ export default function Hall3D({ layout, works: items, wall, label, onFocus, onR
       // aimed a little below the middle, so the label under the work is in view too
       walkTo(w.standX, w.standZ, Math.atan2(-dx, -dz), Math.atan2(w.y - w.h * 0.25 - 0.2 - EYE, Math.hypot(dx, dz)));
     };
-    cb.current.onReady({ walkTo: walkToWork });
+    const hold = (key: string, down: boolean) => {
+      if (!down) return void keys.delete(key);
+      keys.add(key);
+      walk = null;
+      invalidate();
+    };
+    cb.current.onReady({ walkTo: walkToWork, hold });
 
     // size follows the box
     const resize = () => {

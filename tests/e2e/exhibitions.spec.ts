@@ -125,7 +125,7 @@ test('the admin builds an exhibition and a visitor walks through it', async ({ p
   expect([room.width, room.height]).toEqual([viewport.width, viewport.height]);
 
   // the labels are painted on the walls; for the keyboard each work has a link
-  await page.getByRole('button', { name: /(К первой|Следующая) работ/ }).click();
+  await page.getByRole('button', { name: /^(К первой работе|Следующая работа)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const more = page.getByRole('link', { name: new RegExp(`Подробнее: ${works[0].title}`) });
   await expect(more).toHaveAttribute('href', `/gallery/artwork/${works[0].id}`);

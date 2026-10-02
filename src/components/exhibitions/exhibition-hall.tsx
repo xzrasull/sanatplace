@@ -35,13 +35,34 @@ export function ExhibitionHall({ title, back, halls, start }: { title: string; b
 
   const toHall = (k: number) => {
     api.current = null;
+    target.current = -1;
     setFocus(-1);
     setN(k);
     const url = new URL(window.location.href);
     url.searchParams.set('hall', String(k + 1));
     window.history.replaceState(null, '', url);
   };
-  const go = (i: number) => api.current?.walkTo(i);
+  // the work the visitor is at: the one in front, else the last one walked to
+  const target = useRef(-1);
+  const at = focus >= 0 ? focus : target.current;
+  const go = (i: number) => {
+    target.current = i;
+    api.current?.walkTo(i);
+  };
+  const prev = () => (at > 0 ? go(at - 1) : n > 0 && toHall(n - 1));
+  const next = () => (at < last ? go(at + 1) : n < halls.length - 1 && toHall(n + 1));
+  const nextLabel = at < 0 ? 'К первой работе' : at < last ? 'Следующая работа' : n < halls.length - 1 ? 'Следующий зал' : null;
+  const prevLabel = at > 0 ? 'Предыдущая работа' : n > 0 ? 'Предыдущий зал' : null;
+  // the cross: held down, it walks or turns like the keyboard's arrows
+  const pad = (key: string) => ({
+    onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      api.current?.hold(key, true);
+    },
+    onPointerUp: () => api.current?.hold(key, false),
+    onPointerCancel: () => api.current?.hold(key, false),
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+  });
   const full = () => {
     if (document.fullscreenElement) void document.exitFullscreen();
     else void room.current?.requestFullscreen();
@@ -101,28 +122,58 @@ export function ExhibitionHall({ title, back, halls, start }: { title: string; b
         {title}. Зал {hall.number}: {hall.title}
       </h1>
       <p className="ex-room-hint" hidden={touched}>
-        Тяните, чтобы осмотреться. Нажмите на картину или на пол, чтобы подойти.
-        <span className="ex-3d-keys"> Ходить: WASD и стрелки.</span>
+        <span className="ex-hint-touch">Стрелки ‹ › — к соседней картине. Крестовина — ходить. Пальцем — осмотреться.</span>
+        <span className="ex-hint-mouse">Стрелки ‹ › — к соседней картине. Тяните мышью, чтобы осмотреться. Ходить: WASD.</span>
       </p>
 
-      <nav className="ex-room-nav" aria-label="От работы к работе">
-        <button type="button" className="ex-room-btn" disabled={focus <= 0} onClick={() => go(focus - 1)} aria-label="Предыдущая работа">
-          ←
+      {prevLabel && (
+        <button type="button" className="ex-room-side prev" onClick={prev} aria-label={prevLabel}>
+          <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </button>
-        {focus < last ? (
-          <button type="button" className="ex-room-btn" onClick={() => go(focus + 1)}>
-            {focus < 0 ? 'К первой работе →' : 'Следующая работа →'}
+      )}
+      {nextLabel && (
+        <button type="button" className="ex-room-side next" onClick={next} aria-label={nextLabel}>
+          <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+      )}
+
+      <div className="ex-room-nav">
+        {at >= 0 && (
+          <p className="ex-room-btn ex-room-count" aria-live="polite">
+            {at + 1} / {hall.works.length}
+          </p>
+        )}
+        {at < 0 && nextLabel && (
+          <button type="button" className="ex-room-btn" onClick={next}>
+            К первой работе →
           </button>
-        ) : n < halls.length - 1 ? (
-          <button type="button" className="ex-room-btn" onClick={() => toHall(n + 1)}>
+        )}
+        {at === last && nextLabel && (
+          <button type="button" className="ex-room-btn" onClick={next}>
             Следующий зал →
           </button>
-        ) : (
+        )}
+        {at === last && !nextLabel && (
           <Link className="ex-room-btn" href={back}>
             Выйти из выставки
           </Link>
         )}
-      </nav>
+      </div>
+
+      <div className="ex-pad" role="group" aria-label="Ходить по залу">
+        <button type="button" className="up" aria-label="Идти вперёд" {...pad('w')}>
+          ▲
+        </button>
+        <button type="button" className="left" aria-label="Повернуть налево" {...pad('arrowleft')}>
+          ◀
+        </button>
+        <button type="button" className="right" aria-label="Повернуть направо" {...pad('arrowright')}>
+          ▶
+        </button>
+        <button type="button" className="down" aria-label="Идти назад" {...pad('s')}>
+          ▼
+        </button>
+      </div>
     </div>
   );
 }

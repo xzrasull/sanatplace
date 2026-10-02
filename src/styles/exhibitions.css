@@ -225,8 +225,97 @@
     text-align: center;
     pointer-events: none;
   }
-  @media (hover: none) {
-    .ex-3d-keys {
+  .ex-room-count {
+    cursor: default;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* big arrows at the sides: to the next or previous work */
+  .ex-room-side {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    border: 1px solid rgb(0 0 0 / 0.12);
+    background: rgb(255 255 255 / 0.9);
+    color: var(--ink);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+  .ex-room-side.prev {
+    left: max(12px, env(safe-area-inset-left));
+  }
+  .ex-room-side.next {
+    right: max(12px, env(safe-area-inset-right));
+  }
+  .ex-room-side:active {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  /* the cross for walking, on touch screens */
+  .ex-pad {
+    position: absolute;
+    left: max(16px, env(safe-area-inset-left));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    z-index: 2;
+    display: grid;
+    grid-template: repeat(3, 50px) / repeat(3, 50px);
+    gap: 2px;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .ex-pad button {
+    border-radius: 14px;
+    border: 1px solid rgb(0 0 0 / 0.12);
+    background: rgb(255 255 255 / 0.85);
+    color: var(--ink);
+    font-size: 1.1rem;
+    touch-action: none;
+  }
+  .ex-pad button:active {
+    background: var(--ink);
+    color: #fff;
+  }
+  .ex-pad .up {
+    grid-area: 1 / 2;
+  }
+  .ex-pad .left {
+    grid-area: 2 / 1;
+  }
+  .ex-pad .right {
+    grid-area: 2 / 3;
+  }
+  .ex-pad .down {
+    grid-area: 3 / 2;
+  }
+  .ex-hint-touch {
+    display: none;
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .ex-hint-touch {
+      display: inline;
+    }
+    .ex-hint-mouse {
+      display: none;
+    }
+    .ex-room-nav {
+      left: auto;
+      right: max(16px, env(safe-area-inset-right));
+      transform: none;
+    }
+    .ex-room-hint {
+      bottom: calc(max(16px, env(safe-area-inset-bottom)) + 170px);
+    }
+  }
+  @media (hover: hover), (pointer: fine) {
+    .ex-pad {
       display: none;
     }
   }
