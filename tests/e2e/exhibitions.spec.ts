@@ -116,45 +116,23 @@ test('the admin builds an exhibition and a visitor walks through it', async ({ p
   await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Вершины' })).toBeVisible();
 
-  // the hall opens as a 3D room; the label under it names the work in front
+  // the entrance leads to the halls page: the 3D room over the whole screen
+  await page.getByRole('link', { name: 'Войти в выставку →' }).click();
+  await expect(page).toHaveURL(new RegExp(`/exhibitions/${slug}/hall`));
   await expect(page.getByRole('img', { name: /Зал 1 «Вершины» в 3D/ })).toBeVisible({ timeout: 20000 });
-  const bar = page.locator('.ex-3d-bar');
-  await expect(bar.getByText(new RegExp(`${works[0].title}|${works[1].title}`))).toBeVisible({ timeout: 10000 });
-  await bar.getByRole('button', { name: 'Подробнее' }).click();
-  await expect(page).toHaveURL(/work=/);
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog')).toBeHidden();
+  const viewport = page.viewportSize()!;
+  const room = (await page.locator('.ex-room').boundingBox())!;
+  expect([room.width, room.height]).toEqual([viewport.width, viewport.height]);
 
-  // or as a wall, and the choice is remembered
-  await page.getByRole('button', { name: 'Стеной' }).click();
-  await page.reload();
-  await expect(page.getByRole('button', { name: 'Стеной' })).toHaveAttribute('aria-pressed', 'true');
-
-  // the big canvas hangs taller than the study
-  const big = page.getByRole('button', { name: new RegExp(`Открыть: ${works[0].title}`) });
-  const small = page.getByRole('button', { name: new RegExp(`Открыть: ${works[1].title}`) });
-  const [hb, hs] = [(await big.boundingBox())!.height, (await small.boundingBox())!.height];
-  expect(hb).toBeGreaterThan(hs * 2);
-
-  await big.click();
-  await expect(page).toHaveURL(new RegExp(`work=${works[0].id}`));
-  const viewer = page.getByRole('dialog');
-  await expect(viewer.getByText('2500 TJS')).toBeVisible();
-  await viewer.getByRole('button', { name: 'Следующая →' }).click();
-  await expect(page).toHaveURL(new RegExp(`work=${works[1].id}`));
-  await page.keyboard.press('Escape');
-  await expect(viewer).toBeHidden();
-
-  // a shared link opens the work; a stranger's id opens nothing
-  await page.goto(`/exhibitions/${slug}?work=${works[1].id}`);
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await page.goto(`/exhibitions/${slug}?work=00000000-0000-4000-8000-000000000000`);
-  await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
-  await expect(page.getByRole('dialog')).toBeHidden();
+  // each work has its label on the wall; no pop-up card any more
+  const label = page.locator('.ex-tag').filter({ hasText: works[0].title });
+  await expect(label).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('.ex-tag').filter({ hasText: works[1].title })).toBeVisible();
+  await page.getByRole('button', { name: /(К первой|Следующая) работ/ }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 
   // through to the artwork page
-  await page.goto(`/exhibitions/${slug}?work=${works[0].id}`);
-  await page.getByRole('dialog').getByRole('link', { name: 'Подробнее и купить' }).click();
+  await label.getByRole('link', { name: 'Подробнее' }).click();
   await expect(page).toHaveURL(new RegExp(`/gallery/artwork/${works[0].id}`));
   await expect(page.getByText(`Участвует в выставке «${title}»`)).toBeVisible();
 });
@@ -199,8 +177,9 @@ test('a closed exhibition stays open to visitors with a notice; an upcoming one 
 
   await page.goto(`/exhibitions/${closed.slug}`);
   await expect(page.getByText(/Выставка завершилась/)).toBeVisible();
+  await page.getByRole('link', { name: 'Войти в зал →' }).click();
   // the one work hangs facing the entrance, so its label shows at once
-  await expect(page.locator('.ex-3d-bar').getByText(works[0].title)).toBeVisible({ timeout: 20000 });
+  await expect(page.locator('.ex-tag').filter({ hasText: works[0].title })).toBeVisible({ timeout: 20000 });
 
   await page.goto('/exhibitions');
   await expect(page.getByText(`E2E Будущая ${stamp}`)).toBeVisible();

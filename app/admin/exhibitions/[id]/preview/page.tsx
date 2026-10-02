@@ -14,5 +14,5 @@ export default async function ExhibitionPreviewPage({ params }: { params: Promis
   const { id } = await params;
   const view = isUuid(id) ? await getExhibitionPreview(getDb(), id) : undefined;
   if (!view) notFound();
-  return <ExhibitionView view={view} today={todayInDushanbe()} likes={{}} others={[]} preview />;
+  return <ExhibitionView view={view} today={todayInDushanbe()} others={[]} hallHref={`/admin/exhibitions/${id}/preview/hall`} preview />;
 }

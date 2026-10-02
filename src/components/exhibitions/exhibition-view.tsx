@@ -1,45 +1,31 @@
 // src/components/exhibitions/exhibition-view.tsx
 import Image from 'next/image';
 import Link from 'next/link';
-import { Suspense } from 'react';
 import type { ExhibitionCard, ExhibitionViewData } from '@/src/lib/exhibitions/queries';
-import { WALL_COLORS, type WallColor } from '@/src/lib/exhibitions/exhibition-form';
 import { exhibitionPhase } from '@/src/lib/exhibitions/status';
-import { wallShares, workRatio } from '@/src/lib/exhibitions/wall-scale';
 import { dateRange } from '@/src/lib/journal/post-form';
-import type { LikeInfo } from '@/src/lib/likes/likes';
 import { isStorageUrl } from '@/src/lib/uploads/buckets';
 import { MarkdownBody } from '@/src/components/journal/markdown-body';
 import { ExhibitionGrid } from './exhibition-card';
-import { ExhibitionRoom, type RoomHall } from './exhibition-room';
 
-// The entrance, the curator's text, the halls, the artists and other exhibitions.
+// The entrance, the curator's text, the halls with links into the 3D rooms,
+// the artists and other exhibitions.
 export function ExhibitionView({
   view,
   today,
-  likes,
   others,
+  hallHref,
   preview = false,
 }: {
   view: ExhibitionViewData;
   today: string;
-  likes: Record<string, LikeInfo>;
   others: ExhibitionCard[];
+  hallHref: string; // the 3D halls page
   preview?: boolean;
 }) {
   const ex = view.exhibition;
   const phase = exhibitionPhase(ex, today);
-  const halls: RoomHall[] = view.halls.map((h, i) => {
-    const shares = wallShares(h.works.map((w) => w.heightCm));
-    return {
-      id: h.id,
-      number: i + 1,
-      title: h.title,
-      intro: h.intro ? <MarkdownBody source={h.intro} /> : null,
-      wall: h.wallColor && Object.hasOwn(WALL_COLORS, h.wallColor) ? WALL_COLORS[h.wallColor as WallColor].value : null,
-      works: h.works.map((w, j) => ({ ...w, share: shares[j], ratio: workRatio(w) })),
-    };
-  });
+  const halls = view.halls;
 
   return (
     <main className="ex">
@@ -53,23 +39,35 @@ export function ExhibitionView({
           {ex.subtitle && <p className="ex-sub">{ex.subtitle}</p>}
           {ex.curatorName && <p className="ex-cur">Куратор: {ex.curatorName}</p>}
           {halls.length > 0 && (
-            <a className="btn" href="#enter">
-              Войти в выставку ↓
-            </a>
+            <Link className="btn" href={hallHref}>
+              Войти в выставку →
+            </Link>
           )}
         </div>
       </header>
 
-      <div id="enter" className="wrap stack pg">
+      <div className="wrap stack pg">
         {ex.intro && <MarkdownBody source={ex.intro} />}
         {halls.length === 0 && <p className="empty">Экспозиция обновляется. Загляните чуть позже.</p>}
-      </div>
-
-      <Suspense>
-        <ExhibitionRoom halls={halls} likes={likes} />
-      </Suspense>
-
-      <div className="wrap stack pg">
+        {halls.length > 0 && (
+          <section className="sec" aria-labelledby="ex-halls-t">
+            <h2 id="ex-halls-t">Залы</h2>
+            <ol className="ex-halls" role="list">
+              {halls.map((h, i) => (
+                <li key={h.id}>
+                  <p className="eyebrow">
+                    Зал {i + 1} · работ: {h.works.length}
+                  </p>
+                  <h3>{h.title}</h3>
+                  {h.intro && <MarkdownBody source={h.intro} />}
+                  <Link className="btn sm" href={`${hallHref}?hall=${i + 1}`}>
+                    Войти в зал →
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
         {view.artists.length > 0 && (
           <section className="sec" aria-labelledby="ex-artists-t">
             <h2 id="ex-artists-t">Художники выставки</h2>

@@ -32,143 +32,18 @@
     gap: 10px;
     padding-bottom: 48px;
   }
+  .ex-hero-body > .btn {
+    justify-self: start;
+  }
   .ex-hero .eyebrow,
   .ex-sub,
   .ex-cur {
     color: rgb(255 255 255 / 0.88);
   }
 
-  .ex-hall {
-    background: var(--wall, var(--background));
-    padding: 56px 0 40px;
-  }
-  .ex-hall-head {
-    max-width: 68ch;
-    display: grid;
-    gap: 8px;
-  }
 
-  .ex-wall {
-    position: relative;
-  }
-  .ex-track {
-    --wall-h: min(60vh, 560px);
-    display: flex;
-    align-items: center;
-    gap: clamp(32px, 6vw, 96px);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding: 32px max(16px, calc((100vw - 1180px) / 2)) 12px;
-    list-style: none;
-    scrollbar-width: thin;
-  }
-  .ex-track:focus-visible {
-    outline: 2px solid var(--sage);
-    outline-offset: -2px;
-  }
-  .ex-track > li {
-    flex: none;
-    scroll-snap-align: center;
-    display: grid;
-    justify-items: center;
-    gap: 14px;
-  }
-  .ex-work {
-    position: relative;
-    display: block;
-    height: min(calc(var(--wall-h) * var(--s)), calc(80vw / var(--r)));
-    aspect-ratio: var(--r);
-    box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
-    cursor: zoom-in;
-    background: #fff;
-  }
-  .ex-work img {
-    object-fit: contain;
-  }
-  .ex-arrow {
-    position: absolute;
-    top: 45%;
-    z-index: 1;
-    width: 44px;
-    height: 44px;
-    border-radius: 999px;
-    background: var(--card);
-    border: 1px solid var(--border);
-  }
-  .ex-arrow.prev {
-    left: 12px;
-  }
-  .ex-arrow.next {
-    right: 12px;
-  }
 
-  .ex-label {
-    max-width: 28ch;
-    text-align: left;
-    font-size: 0.9rem;
-    line-height: 1.4;
-    justify-self: start;
-  }
-  .ex-label-t {
-    font-weight: 700;
-  }
-  .ex-label-m,
-  .ex-label-n {
-    color: var(--mute);
-  }
-  .ex-label-p {
-    margin-top: 4px;
-  }
-  .ex-label-n {
-    margin-top: 6px;
-    font-style: italic;
-  }
 
-  .ex-viewer {
-    width: min(1180px, 100vw - 32px);
-    max-height: calc(100svh - 32px);
-    padding: 0;
-    border: 0;
-    background: var(--background);
-    overscroll-behavior: contain;
-  }
-  .ex-viewer::backdrop {
-    background: rgb(0 0 0 / 0.75);
-  }
-  .ex-viewer-in {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 300px;
-    gap: 24px;
-    padding: 24px;
-  }
-  .ex-viewer-img {
-    position: relative;
-    aspect-ratio: var(--r);
-    max-height: calc(100svh - 96px);
-    width: 100%;
-  }
-  .ex-viewer-img img {
-    object-fit: contain;
-  }
-  .ex-viewer-side {
-    display: grid;
-    align-content: start;
-    gap: 16px;
-  }
-  .ex-viewer-x {
-    position: absolute;
-    top: 8px;
-    right: 12px;
-    width: 44px;
-    height: 44px;
-    font-size: 1.6rem;
-  }
-  .ex-viewer-nav {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
 
   .ex-grid {
     display: grid;
@@ -215,41 +90,47 @@
     list-style: none;
   }
 
-  .ex-mode {
-    display: flex;
-    gap: 8px;
-    padding-top: 8px;
+  .ex-halls {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    list-style: none;
   }
-  .ex-mode [aria-pressed='true'],
-  .ex-3d-tabs [aria-current='true'] {
-    background: var(--ink);
-    color: var(--background);
+  .ex-halls > li {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 8px;
+    padding: 20px;
+    border: 1px solid var(--border);
+  }
+  .ex-halls h3 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
   }
 
-  .ex-3d-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
+  /* The hall page: the 3D room over the whole screen, controls laid on top. */
+  html:has(.ex-room) {
+    overflow: hidden;
   }
-  .ex-3d-stage {
-    position: relative;
-    height: min(78svh, 720px);
-    margin-top: 24px;
+  .ex-room {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
     background: var(--wall);
-  }
-  .ex-3d-stage:fullscreen {
-    height: 100%;
+    color: var(--ink);
   }
   .ex-3d-canvas,
   .ex-3d-canvas canvas {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     display: block;
   }
   .ex-3d-canvas canvas {
     cursor: grab;
-    touch-action: pan-y;
+    touch-action: none;
     outline-offset: -3px;
   }
   .ex-3d-canvas canvas:active {
@@ -260,47 +141,89 @@
     place-items: center;
     color: var(--mute);
   }
-  .ex-3d-hint {
+  .ex-room-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid rgb(0 0 0 / 0.12);
+    background: rgb(255 255 255 / 0.92);
+    color: var(--ink);
+    font: 700 0.9rem/1.1 var(--sans);
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.08);
+    cursor: pointer;
+  }
+  .ex-room-btn[aria-current='true'] {
+    background: var(--ink);
+    color: #fff;
+  }
+  .ex-room-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .ex-room-top {
     position: absolute;
-    left: 12px;
-    top: 12px;
-    max-width: calc(100% - 80px);
-    padding: 6px 10px;
-    font-size: 0.8rem;
-    background: rgb(255 255 255 / 0.8);
+    inset: 0 0 auto;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: max(12px, env(safe-area-inset-top)) 12px 12px;
     pointer-events: none;
   }
-  .ex-3d-full {
-    position: absolute;
-    right: 12px;
-    top: 12px;
+  .ex-room-top > * {
+    pointer-events: auto;
+  }
+  .ex-room-ex {
+    max-width: 28ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ex-room-tabs .ex-room-btn {
+    gap: 0;
+  }
+  .ex-room-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    min-width: 0;
+    scrollbar-width: none;
+  }
+  .ex-room-full {
+    margin-left: auto;
     width: 44px;
-    height: 44px;
-    border-radius: 999px;
-    background: var(--card);
-    border: 1px solid var(--border);
+    justify-content: center;
+    padding: 0;
     font-size: 1.2rem;
   }
-  .ex-3d-bar {
+  .ex-room-nav {
+    position: absolute;
+    left: 50%;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    z-index: 2;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: start;
-    gap: 16px;
-    padding-top: 20px;
-    min-height: 120px;
-  }
-  .ex-3d-bar .ex-label {
-    max-width: 48ch;
-  }
-  .ex-3d-none {
-    color: var(--mute);
-    font-size: 0.9rem;
-  }
-  .ex-3d-nav {
-    display: flex;
-    flex-wrap: wrap;
     gap: 8px;
+    transform: translateX(-50%);
+  }
+  .ex-room-hint {
+    position: absolute;
+    left: 50%;
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 60px);
+    z-index: 2;
+    width: max-content;
+    max-width: calc(100% - 32px);
+    transform: translateX(-50%);
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgb(0 0 0 / 0.6);
+    color: #fff;
+    font-size: 0.85rem;
+    text-align: center;
+    pointer-events: none;
   }
   @media (hover: none) {
     .ex-3d-keys {
@@ -308,33 +231,62 @@
     }
   }
 
+  /* the museum label under each work, moved by the 3D scene */
+  .ex-tags {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .ex-tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    width: max-content;
+    max-width: 260px;
+    padding: 10px 14px 12px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+    text-align: center;
+    transform-origin: 0 0;
+    pointer-events: auto;
+    will-change: transform;
+  }
+  .ex-tag-t {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.25;
+  }
+  .ex-tag-a {
+    font-size: 0.85rem;
+    color: var(--mute);
+  }
+  .ex-tag-more {
+    margin-top: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--sage);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .ex-tag-more:hover {
+    background: var(--sage-d);
+  }
+
   @media (max-width: 767px) {
-    .ex-track {
-      --wall-h: 70svh;
-      flex-direction: column;
-      overflow: visible;
-      scroll-snap-type: none;
-      padding: 24px 16px 8px;
-    }
-    .ex-track > li {
-      width: 100%;
-    }
-    .ex-label {
-      justify-self: center;
-    }
-    .ex-work {
-      height: auto;
-      width: min(100%, calc(var(--wall-h) * var(--s) * var(--r)));
-    }
-    .ex-arrow {
+    .ex-room-ht,
+    .ex-room-ex {
       display: none;
     }
-    .ex-3d-stage {
-      height: 68svh;
-    }
-    .ex-viewer-in {
-      grid-template-columns: 1fr;
-      padding: 16px;
+    .ex-tag {
+      max-width: 200px;
+      padding: 8px 10px 10px;
     }
   }
 

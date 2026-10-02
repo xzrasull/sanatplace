@@ -3,7 +3,8 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ExhibitionView } from '../../src/components/exhibitions/exhibition-view';
 import { exhibitionPhase, phaseNote } from '../../src/lib/exhibitions/status';
-import { MIN_SHARE, wallShares, workRatio } from '../../src/lib/exhibitions/wall-scale';
+import { workRatio } from '../../src/lib/exhibitions/wall-scale';
+import { hallIndex } from '../../src/lib/exhibitions/hall-data';
 import { roomLayout, type Hung, type RoomLayout } from '../../src/lib/exhibitions/room-layout';
 import { parseExhibitionForm, parseHallForm, parseWorkNote, isExhibitionErrorCode } from '../../src/lib/exhibitions/exhibition-form';
 import { todayInDushanbe } from '../../src/lib/journal/post-form';
@@ -37,18 +38,14 @@ describe('exhibitionPhase', () => {
   });
 });
 
-describe('wallShares', () => {
-  it('scales by height in cm against the tallest work', () => {
-    expect(wallShares([100, 50])).toEqual([1, 0.5]);
-  });
-  it('keeps a miniature next to a big canvas visible', () => {
-    expect(wallShares([200, 20])).toEqual([1, MIN_SHARE]);
-  });
-  it('handles one work, equal sizes, none and zeros', () => {
-    expect(wallShares([40])).toEqual([1]);
-    expect(wallShares([40, 40])).toEqual([1, 1]);
-    expect(wallShares([])).toEqual([]);
-    expect(wallShares([0, 0])).toEqual([1, 1]);
+describe('hallIndex', () => {
+  it('reads ?hall=N as a 1-based hall, else the first', () => {
+    expect(hallIndex('2', 3)).toBe(1);
+    expect(hallIndex(['3'], 3)).toBe(2);
+    expect(hallIndex('4', 3)).toBe(0);
+    expect(hallIndex('0', 3)).toBe(0);
+    expect(hallIndex('1.5', 3)).toBe(0);
+    expect(hallIndex(undefined, 3)).toBe(0);
   });
 });
 
@@ -145,12 +142,21 @@ describe('ExhibitionView', () => {
     halls: [],
     artists: [],
   };
+  it('leads into the 3D halls, one link per hall', () => {
+    const hall = { id: 'h1', title: 'Вершины', intro: null, wallColor: null, works: [] };
+    const html = renderToStaticMarkup(
+      createElement(ExhibitionView, { view: { ...base, halls: [hall, { ...hall, id: 'h2', title: 'Долины' }] }, today: '2026-11-10', others: [], hallHref: '/exhibitions/gory/hall' }),
+    );
+    expect(html).toContain('href="/exhibitions/gory/hall"');
+    expect(html).toContain('href="/exhibitions/gory/hall?hall=2"');
+    expect(html).toContain('Долины');
+  });
   it('says the exposition is being updated when no work is left', () => {
-    const html = renderToStaticMarkup(createElement(ExhibitionView, { view: base, today: '2026-11-10', likes: {}, others: [] }));
+    const html = renderToStaticMarkup(createElement(ExhibitionView, { view: base, today: '2026-11-10', others: [], hallHref: '/exhibitions/gory/hall' }));
     expect(html).toContain('Экспозиция обновляется');
   });
   it('marks a closed exhibition', () => {
-    const html = renderToStaticMarkup(createElement(ExhibitionView, { view: base, today: '2026-12-02', likes: {}, others: [] }));
+    const html = renderToStaticMarkup(createElement(ExhibitionView, { view: base, today: '2026-12-02', others: [], hallHref: '/exhibitions/gory/hall' }));
     expect(html).toContain('Выставка завершилась 30 ноября');
   });
 });
@@ -161,11 +167,11 @@ describe('roomLayout', () => {
   const onSideWall = (h: Hung) => Math.abs(Math.abs(h.rotY) - Math.PI / 2) < 0.01;
   const along = (h: Hung) => (onSideWall(h) ? h.z : h.x);
 
-  it('a few works fit the smallest room, on the far wall, in real size', () => {
+  it('a few works fit the smallest room (10 × 7 m), on the far wall, in real size', () => {
     const l = roomLayout(works(2, 150, 2 / 3));
-    expect([l.width, l.depth]).toEqual([7, 5]);
+    expect([l.width, l.depth]).toEqual([10, 7]);
     expect(l.works.map((w) => w.id)).toEqual(['w0', 'w1']);
-    expect(l.works.every((w) => w.z < -2.4 && w.rotY === 0)).toBe(true);
+    expect(l.works.every((w) => w.z < -3.4 && w.rotY === 0)).toBe(true);
     expect(l.works[0].h).toBeCloseTo(1.5);
     expect(l.works[0].w).toBeCloseTo(1);
   });
@@ -173,7 +179,7 @@ describe('roomLayout', () => {
   it('many works grow the room; none overlap or leave their wall, and the visitor stands inside', () => {
     const many = [...works(25), ...works(5, 200, 1.5)].map((w, i) => ({ ...w, id: `w${i}` }));
     const l: RoomLayout = roomLayout(many);
-    expect(l.width).toBeGreaterThan(7);
+    expect(l.width).toBeGreaterThan(10);
     expect(l.works.map((w) => w.id)).toEqual(many.map((w) => w.id));
     const byWall = new Map<string, Hung[]>();
     for (const h of l.works) byWall.set(h.rotY.toFixed(2), [...(byWall.get(h.rotY.toFixed(2)) ?? []), h]);
@@ -192,6 +198,6 @@ describe('roomLayout', () => {
   });
 
   it('an empty hall is the smallest room', () => {
-    expect(roomLayout([])).toMatchObject({ width: 7, depth: 5, works: [] });
+    expect(roomLayout([])).toMatchObject({ width: 10, depth: 7, works: [] });
   });
 });

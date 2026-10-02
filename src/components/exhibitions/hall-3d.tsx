@@ -1,6 +1,7 @@
 // src/components/exhibitions/hall-3d.tsx
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { EYE, type RoomLayout } from '@/src/lib/exhibitions/room-layout';
@@ -8,14 +9,14 @@ import { prefersReducedMotion } from '@/src/lib/sanat/reveal';
 import { isStorageUrl } from '@/src/lib/uploads/buckets';
 
 export type HallApi = { walkTo: (index: number) => void };
+export type HallWork = { id: string; title: string; artistName: string; imageUrl: string };
 
 type Props = {
   layout: RoomLayout;
-  images: string[]; // in the layout's order
+  works: HallWork[]; // in the layout's order
   wall: string;
   label: string;
   onFocus: (index: number) => void; // the work in front of the visitor, or -1
-  onOpen: (index: number) => void; // a click on the work already in front
   onReady: (api: HallApi) => void;
 };
 
@@ -30,12 +31,16 @@ const textureUrl = (src: string) => (isStorageUrl(src) ? `/_next/image?url=${enc
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 const angleTo = (from: number, to: number) => from + Math.atan2(Math.sin(to - from), Math.cos(to - from));
 
-// One hall as a small room the visitor walks through. Nothing is drawn while
-// nothing moves: a frame is asked for on input and while a walk lasts.
-export default function Hall3D({ layout, images, wall, label, onFocus, onOpen, onReady }: Props) {
+const TAG_RANGE = 8; // m: labels further away are hidden
+
+// One hall as a room the visitor walks through, with a label under each work.
+// Nothing is drawn while nothing moves: a frame is asked for on input and while
+// a walk lasts. The labels are HTML laid over the canvas and moved each frame.
+export default function Hall3D({ layout, works: items, wall, label, onFocus, onReady }: Props) {
   const box = useRef<HTMLDivElement>(null);
-  const cb = useRef({ onFocus, onOpen, onReady });
-  cb.current = { onFocus, onOpen, onReady };
+  const tags = useRef<(HTMLDivElement | null)[]>([]);
+  const cb = useRef({ onFocus, onReady });
+  cb.current = { onFocus, onReady };
 
   useEffect(() => {
     const host = box.current;
@@ -100,7 +105,7 @@ export default function Hall3D({ layout, images, wall, label, onFocus, onOpen, o
     });
 
     // the visitor
-    const pos = new THREE.Vector3(0, EYE, D / 2 - 1.2);
+    const pos = new THREE.Vector3(0, EYE, D / 2 - 1.5);
     let yaw = 0;
     let pitch = 0.02;
     const keys = new Set<string>();
@@ -128,11 +133,32 @@ export default function Hall3D({ layout, images, wall, label, onFocus, onOpen, o
       works.forEach((w, i) => {
         to.set(w.x - pos.x, w.y - pos.y, w.z - pos.z);
         const dist = to.length();
-        if (dist > Math.max(5, w.w * 2.5)) return;
+        if (dist > Math.max(6, w.w * 2.5)) return;
         const c = to.normalize().dot(fwd);
         if (c > bestCos) [best, bestCos] = [i, c];
       });
       if (best !== focus) cb.current.onFocus((focus = best));
+    };
+
+    // each label hangs just under its work, smaller further off
+    const at = new THREE.Vector3();
+    let [cw, ch] = [1, 1];
+    const placeTags = () => {
+      works.forEach((w, i) => {
+        const el = tags.current[i];
+        if (!el) return;
+        const [nx, nz] = [Math.sin(w.rotY), Math.cos(w.rotY)];
+        at.set(w.x + nx * 0.05, w.y - w.h / 2 - 0.08, w.z + nz * 0.05);
+        const dist = at.distanceTo(pos);
+        const facing = nx * (pos.x - at.x) + nz * (pos.z - at.z) > 0.2;
+        at.project(camera);
+        const shown = facing && dist < TAG_RANGE && at.z < 1 && Math.abs(at.x) < 1.1 && Math.abs(at.y) < 1.1;
+        el.style.visibility = shown ? 'visible' : 'hidden';
+        if (!shown) return;
+        const k = Math.min(1.1, Math.max(0.6, 3 / dist));
+        el.style.opacity = String(Math.min(1, (TAG_RANGE - dist) / 1.5));
+        el.style.transform = `translate(${((at.x + 1) / 2) * cw}px, ${((1 - at.y) / 2) * ch}px) scale(${k}) translateX(-50%)`;
+      });
     };
 
     const tick = (now: number) => {
@@ -163,6 +189,7 @@ export default function Hall3D({ layout, images, wall, label, onFocus, onOpen, o
       }
       place();
       renderer.render(scene, camera);
+      placeTags();
       findFocus();
       if (moving) frame = requestAnimationFrame(tick);
       else last = 0;
@@ -187,13 +214,14 @@ export default function Hall3D({ layout, images, wall, label, onFocus, onOpen, o
       const w = works[i];
       if (!w) return;
       const [dx, dz] = [w.x - w.standX, w.z - w.standZ];
-      walkTo(w.standX, w.standZ, Math.atan2(-dx, -dz), Math.atan2(w.y - EYE, Math.hypot(dx, dz)));
+      // aimed a little below the middle, so the label under the work is in view too
+      walkTo(w.standX, w.standZ, Math.atan2(-dx, -dz), Math.atan2(w.y - w.h * 0.2 - 0.15 - EYE, Math.hypot(dx, dz)));
     };
     cb.current.onReady({ walkTo: walkToWork });
 
     // size follows the box
     const resize = () => {
-      const { clientWidth: cw, clientHeight: ch } = host;
+      [cw, ch] = [host.clientWidth, host.clientHeight];
       if (!cw || !ch) return;
       renderer.setSize(cw, ch, false);
       camera.aspect = cw / ch;
@@ -214,7 +242,7 @@ export default function Hall3D({ layout, images, wall, label, onFocus, onOpen, o
       const i = queue.shift();
       if (i === undefined || dead) return;
       loader.load(
-        textureUrl(images[i]),
+        textureUrl(items[i].imageUrl),
         (tex) => {
           if (dead) return tex.dispose();
           tex.colorSpace = THREE.SRGBColorSpace;
@@ -250,8 +278,7 @@ export default function Hall3D({ layout, images, wall, label, onFocus, onOpen, o
       [drag.x, drag.y] = [e.clientX, e.clientY];
       const k = drag.touch ? 0.006 : 0.004;
       yaw += dx * k;
-      // on a phone, vertical swipes scroll the page (touch-action: pan-y)
-      if (!drag.touch) pitch = Math.min(MAX_PITCH, Math.max(-MAX_PITCH, pitch + dy * k));
+      pitch = Math.min(MAX_PITCH, Math.max(-MAX_PITCH, pitch + dy * k));
       invalidate();
     };
     const up = (e: PointerEvent) => {
@@ -264,9 +291,7 @@ export default function Hall3D({ layout, images, wall, label, onFocus, onOpen, o
       const hit = ray.intersectObjects([...paintings, floor], false)[0];
       if (!hit) return;
       const i = paintings.indexOf(hit.object as (typeof paintings)[number]);
-      if (i < 0) return walkTo(hit.point.x, hit.point.z);
-      const w = works[i];
-      if (i === focus && Math.hypot(pos.x - w.standX, pos.z - w.standZ) < 0.6) cb.current.onOpen(i);
+      if (i < 0) walkTo(hit.point.x, hit.point.z);
       else walkToWork(i);
     };
     const keyName = (e: KeyboardEvent) => {
@@ -304,7 +329,21 @@ export default function Hall3D({ layout, images, wall, label, onFocus, onOpen, o
       renderer.forceContextLoss();
       canvas.remove();
     };
-  }, [layout, images, wall, label]);
+  }, [layout, items, wall, label]);
 
-  return <div ref={box} className="ex-3d-canvas" />;
+  return (
+    <div ref={box} className="ex-3d-canvas">
+      <div className="ex-tags">
+        {items.map((w, i) => (
+          <div key={w.id} ref={(el) => void (tags.current[i] = el)} className="ex-tag" style={{ visibility: 'hidden' }}>
+            <p className="ex-tag-t">{w.title}</p>
+            <p className="ex-tag-a">{w.artistName}</p>
+            <Link className="ex-tag-more" href={`/gallery/artwork/${w.id}`}>
+              Подробнее
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }

@@ -1,12 +1,12 @@
 // Where each work hangs in a hall's 3D room. Works keep their real size in cm
 // and go round the room clockwise from the far wall: far, right, back, left.
-// The room is as small as the works allow: 7 × 5 m at least, wider in steps.
+// The room is 10 × 7 m at least and grows in steps when the works need more wall.
 
 export const EYE = 1.6; // m, the visitor's eye height
-const GAP = 0.9; // m between neighbouring works
-const CORNER = 0.8; // m kept free at each end of a wall
-const MIN_W = 7;
-const MIN_D = 5;
+const GAP = 1.2; // m between neighbouring works
+const CORNER = 1; // m kept free at each end of a wall
+const MIN_W = 10;
+const MIN_D = 7;
 
 export type Hung = {
   id: string;
@@ -77,8 +77,8 @@ export function roomLayout(works: { id: string; heightCm: number; ratio: number 
       along += w + GAP;
       const x = wall.x + wall.dx * mid + wall.nx * 0.03;
       const z = wall.z + wall.dz * mid + wall.nz * 0.03;
-      // far enough to take in the whole work with a 60° view, never past the room's middle
-      const back = Math.min(Math.max(1.4, Math.max(w, h) * 1.1 + 0.4), depth / 2);
+      // far enough that the work and its label take about half the view, never past the room's middle
+      const back = Math.min(Math.max(2, Math.max(w, h) * 1.6 + 0.6), depth / 2);
       hung.push({
         id: works[i].id,
         x,
@@ -93,5 +93,5 @@ export function roomLayout(works: { id: string; heightCm: number; ratio: number 
     }
   });
   const top = Math.max(0, ...hung.map((h) => h.y + h.h / 2));
-  return { width: W, depth: D, height: Math.max(3.2, top + 0.6), works: hung };
+  return { width: W, depth: D, height: Math.max(3.8, top + 0.8), works: hung };
 }
