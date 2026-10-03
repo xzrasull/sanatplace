@@ -6,7 +6,7 @@ export const OPERATOR = {
   // Taxpayer id (ИНН) or registration number; leave empty if not applicable.
   registration: '',
   address: 'Dushanbe',
-  telegram: '@xzrasul',
+  telegram: '@sanatplace',
   email: 'xzrasul13@gmail.com',
 };
 
