@@ -900,6 +900,9 @@
     display: flex;
     gap: 16px;
     overflow-x: auto;
+    /* cards waiting to rise in (.rv) hang below the strip; without this it
+       would scroll up and down under a finger */
+    overflow-y: hidden;
     scroll-snap-type: x proximity;
     scroll-padding-inline: max(30px, calc(50vw - 590px));
     margin-inline: calc(50% - 50vw);
@@ -909,10 +912,6 @@
   }
   .rail::-webkit-scrollbar {
     display: none;
-  }
-  /* a swipe down the page is under way (rail.tsx): the strip stays put */
-  .rail.held {
-    overflow-x: hidden;
   }
   .rail > * {
     flex: none;

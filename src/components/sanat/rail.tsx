@@ -12,9 +12,6 @@ function Arrow() {
   );
 }
 
-// how far a finger moves (px) before a swipe counts as down or across
-const AXIS_SLOP = 4;
-
 // A horizontal strip of cards that starts at the content column and runs off
 // the right edge of the screen. Under it: a thin progress line and prev/next
 // arrows. Cards already on screen stay put; the ones waiting off to the right
@@ -49,39 +46,6 @@ export function Rail({
     return () => {
       el.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
-    };
-  }, []);
-
-  // A swipe down the page that starts on the strip must not drag it sideways:
-  // once the finger has gone more down than across, the strip is held in
-  // place until the finger lifts.
-  useEffect(() => {
-    const el = rail.current!;
-    let x = 0;
-    let y = 0;
-    let decided = false;
-    const start = (e: TouchEvent) => {
-      ({ clientX: x, clientY: y } = e.touches[0]);
-      decided = false;
-    };
-    const move = (e: TouchEvent) => {
-      if (decided) return;
-      const dx = Math.abs(e.touches[0].clientX - x);
-      const dy = Math.abs(e.touches[0].clientY - y);
-      if (dx < AXIS_SLOP && dy < AXIS_SLOP) return;
-      decided = true;
-      if (dy > dx) el.classList.add('held');
-    };
-    const end = () => el.classList.remove('held');
-    el.addEventListener('touchstart', start, { passive: true });
-    el.addEventListener('touchmove', move, { passive: true });
-    el.addEventListener('touchend', end);
-    el.addEventListener('touchcancel', end);
-    return () => {
-      el.removeEventListener('touchstart', start);
-      el.removeEventListener('touchmove', move);
-      el.removeEventListener('touchend', end);
-      el.removeEventListener('touchcancel', end);
     };
   }, []);
 
