@@ -739,5 +739,53 @@ ALTER TABLE public.staff_accounts ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
+--
+-- Name: artwork_likes; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.artwork_likes ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: artworks; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.artworks ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: categories; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: home_collage; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.home_collage ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: login_requests; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.login_requests ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: seller_applications; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.seller_applications ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: techniques; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.techniques ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: users; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
 \unrestrict 07klbNuujbs6Ke1yOzhi0E52uNp5cdGIoLD9QigB18Mejc9bhLbCRrKpE1nVd0b
 

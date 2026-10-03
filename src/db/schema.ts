@@ -1,6 +1,10 @@
 import { pgTable, uuid, text, timestamp, integer, bigint, boolean, date, pgEnum, primaryKey, index, unique } from 'drizzle-orm/pg-core';
 import { POST_CATEGORIES } from '../lib/journal/categories';
 
+// Every table has row level security on, so Supabase's public Data API cannot
+// reach it. The app connects as the tables' owner, which RLS doesn't apply to.
+// (banners and posts also have a public read policy, see their migrations.)
+
 export const roleEnum = pgEnum('role', ['buyer', 'seller', 'admin']);
 export const applicationStatusEnum = pgEnum('application_status', [
   'pending',
@@ -16,7 +20,7 @@ export const users = pgTable('users', {
   photoUrl: text('photo_url'),
   role: roleEnum('role').notNull().default('buyer'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+}).enableRLS();
 
 export const sellerApplications = pgTable('seller_applications', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -35,7 +39,7 @@ export const sellerApplications = pgTable('seller_applications', {
   reviewedByAdminId: uuid('reviewed_by_admin_id').references(() => users.id),
   submittedAt: timestamp('submitted_at').notNull().defaultNow(),
   reviewedAt: timestamp('reviewed_at'),
-});
+}).enableRLS();
 
 export const artworkStatusEnum = pgEnum('artwork_status', [
   'pending',
@@ -48,13 +52,13 @@ export const categories = pgTable('categories', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull().unique(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+}).enableRLS();
 
 export const techniques = pgTable('techniques', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull().unique(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+}).enableRLS();
 
 export const artworks = pgTable('artworks', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -83,7 +87,7 @@ export const artworks = pgTable('artworks', {
   submittedAt: timestamp('submitted_at').notNull().defaultNow(),
   reviewedAt: timestamp('reviewed_at'),
   reviewedByAdminId: uuid('reviewed_by_admin_id').references(() => users.id),
-});
+}).enableRLS();
 
 // One-time "sign in via the bot" requests. The browser keeps the raw token in
 // an httpOnly cookie and the bot receives it as the /start payload; only its
@@ -97,7 +101,7 @@ export const loginRequests = pgTable('login_requests', {
   expiresAt: timestamp('expires_at').notNull(),
   confirmedAt: timestamp('confirmed_at'),
   consumedAt: timestamp('consumed_at'),
-});
+}).enableRLS();
 
 // One row per (user, artwork) like: the pair is the key, so a work can't be
 // liked twice. Likes go away with the artwork or the user.
@@ -113,7 +117,7 @@ export const artworkLikes = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.artworkId] }), index('artwork_likes_artwork_id_idx').on(t.artworkId)],
-);
+).enableRLS();
 
 // The admin's picks for the home page collage: slot a (tall), b, c. An empty
 // slot, or one whose work is no longer on sale, falls back to the newest work.
@@ -124,7 +128,7 @@ export const homeCollage = pgTable('home_collage', {
     .unique()
     .references(() => artworks.id, { onDelete: 'cascade' }),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+}).enableRLS();
 
 // Home page banner slides, managed by the admin. The public reads only active
 // ones inside their show window, ordered by sort_order.
@@ -146,7 +150,7 @@ export const banners = pgTable('banners', {
   startsAt: timestamp('starts_at', { withTimezone: true }),
   endsAt: timestamp('ends_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}).enableRLS();
 
 // «Афиша и журнал»: exhibitions, events, news and articles, written by the
 // admin. The public sees only published ones (status 'published' and
@@ -183,7 +187,7 @@ export const posts = pgTable(
     index('posts_status_published_idx').on(t.status, t.publishedAt),
     index('posts_starts_on_idx').on(t.startsOn),
   ],
-);
+).enableRLS();
 
 // Online exhibitions: curated selections of catalog works, in halls, open
 // between two Dushanbe dates. Only the admin builds them.
