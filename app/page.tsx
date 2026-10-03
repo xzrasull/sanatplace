@@ -8,9 +8,9 @@ import { likeInfoFor, type LikeInfo } from '@/src/lib/likes/likes';
 import { plural } from '@/src/lib/ru-format';
 import { BRAND_NAME } from '@/src/lib/brand';
 import { todayInDushanbe } from '@/src/lib/journal/post-form';
-import { listHomeAfisha, type PostSummary } from '@/src/lib/journal/posts';
-import { getOpenExhibitionForHome, type ExhibitionCard } from '@/src/lib/exhibitions/queries';
-import { ExhibitionCardView } from '@/src/components/exhibitions/exhibition-card';
+import { homeAfisha, type AfishaCard } from '@/src/lib/journal/afisha';
+import { listHomeAfisha } from '@/src/lib/journal/posts';
+import { listAfishaExhibitions } from '@/src/lib/exhibitions/queries';
 import { PostGrid } from '@/src/components/journal/post-card';
 import { ArtworkCard, RAIL_CARD_SIZES } from '@/src/components/artwork/artwork-card';
 import { Hero } from '@/src/components/home/hero';
@@ -25,19 +25,19 @@ const liveBanners = unstable_cache(() => listLiveBanners(getDb()), ['live-banner
   tags: ['banners'],
 });
 
-// «Афиша»: the nearest exhibitions and events, then the newest posts; the
-// admin's journal actions revalidate the 'posts' tag.
-const upcomingEvents = unstable_cache((today: string) => listHomeAfisha(getDb(), today, 3), ['home-afisha'], {
-  revalidate: 60,
-  tags: ['posts'],
-});
+const AFISHA_SIZE = 3;
 
-// The open online exhibition for the home block; the admin's exhibition
-// actions revalidate the 'exhibitions' tag.
-const openExhibition = unstable_cache((today: string) => getOpenExhibitionForHome(getDb(), today), ['home-exhibition'], {
-  revalidate: 60,
-  tags: ['exhibitions'],
-});
+// «Афиша»: the nearest exhibitions (online ones too) and events, then the
+// newest posts; the admin's journal and exhibition actions revalidate the
+// 'posts' and 'exhibitions' tags.
+const upcomingEvents = unstable_cache(
+  async (today: string) => {
+    const [posts, shows] = await Promise.all([listHomeAfisha(getDb(), today, AFISHA_SIZE), listAfishaExhibitions(getDb())]);
+    return { posts, shows };
+  },
+  ['home-afisha'],
+  { revalidate: 60, tags: ['posts', 'exhibitions'] },
+);
 
 export default async function HomePage() {
   const user = await getCurrentUser();
@@ -47,20 +47,17 @@ export default async function HomePage() {
   let slides: HeroSlide[] = [];
   let loadFailed = false;
   const today = todayInDushanbe();
-  let events: PostSummary[] = [];
-  let exhibition: ExhibitionCard | undefined;
-  const [catalog, banners, upcoming, onShow] = await Promise.allSettled([
+  let events: AfishaCard[] = [];
+  const [catalog, banners, upcoming] = await Promise.allSettled([
     searchCatalog(getDb(), {}, { page: 1, pageSize: RAIL_SIZE }),
     liveBanners(),
     upcomingEvents(today),
-    openExhibition(today),
   ]);
   if (upcoming.status === 'fulfilled') {
     // the cache hands dates back as strings
-    events = upcoming.value.map((p) => ({ ...p, publishedAt: p.publishedAt ? new Date(p.publishedAt) : null }));
+    const posts = upcoming.value.posts.map((p) => ({ ...p, publishedAt: p.publishedAt ? new Date(p.publishedAt) : null }));
+    events = homeAfisha(posts, upcoming.value.shows, today, AFISHA_SIZE);
   } else console.error('home: failed to load upcoming events', upcoming.reason);
-  if (onShow.status === 'fulfilled') exhibition = onShow.value;
-  else console.error('home: failed to load the open exhibition', onShow.reason);
   if (banners.status === 'fulfilled') slides = banners.value;
   else console.error('home: failed to load banners', banners.reason);
   if (catalog.status === 'fulfilled') {
@@ -97,17 +94,6 @@ export default async function HomePage() {
               </small>
             </Link>
           </Rail>
-        )}
-        {exhibition && (
-          <section className="sec" aria-labelledby="home-ex-t">
-            <div className="sec-head">
-              <h2 id="home-ex-t">Сейчас на выставке</h2>
-              <Link className="more" href="/journal?c=exhibition">
-                Все выставки
-              </Link>
-            </div>
-            <ExhibitionCardView card={exhibition} today={today} />
-          </section>
         )}
         <section className="sec home-j" aria-labelledby="home-j-t">
           <div className="sec-head">

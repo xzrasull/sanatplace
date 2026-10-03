@@ -145,11 +145,6 @@ export async function listAfishaExhibitions(db: Db, now = new Date()): Promise<E
     .orderBy(desc(exhibitions.startsOn), asc(exhibitions.title));
 }
 
-export async function getOpenExhibitionForHome(db: Db, today: string): Promise<ExhibitionCard | undefined> {
-  const [row] = await db.select(CARD).from(exhibitions).where(running(today)).orderBy(desc(exhibitions.startsOn)).limit(1);
-  return row;
-}
-
 export async function listOtherExhibitions(db: Db, exceptId: string, today: string, limit = 3): Promise<ExhibitionCard[]> {
   return db
     .select(CARD)

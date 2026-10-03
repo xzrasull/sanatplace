@@ -1,6 +1,6 @@
 import type { ExhibitionCard } from '../exhibitions/queries';
 import { exhibitionPhase } from '../exhibitions/status';
-import { dateRange } from './post-form';
+import { dateRange, isDated, isOver } from './post-form';
 import type { PostSummary } from './posts';
 
 // A journal card: a post, or an online exhibition standing among the posts.
@@ -38,4 +38,15 @@ const sortTime = (c: AfishaCard) =>
 export function mergeAfisha(posts: PostSummary[], shows: ExhibitionCard[], today: string, limit: number): AfishaCard[] {
   if (shows.length === 0) return posts;
   return [...posts, ...shows.map((e) => exhibitionAsCard(e, today))].sort((a, b) => sortTime(b) - sortTime(a)).slice(0, limit);
+}
+
+// The home page «Афиша»: exhibitions (online ones too) and events that have
+// not finished yet, soonest first, then the rest of `posts` (the newest ones).
+export function homeAfisha(posts: PostSummary[], shows: ExhibitionCard[], today: string, limit: number): AfishaCard[] {
+  const ahead = (p: PostSummary) => isDated(p.category) && p.startsOn !== null && !isOver(p, today);
+  const events: AfishaCard[] = [
+    ...posts.filter(ahead),
+    ...shows.filter((e) => e.endsOn >= today).map((e) => exhibitionAsCard(e, today)),
+  ].sort((a, b) => (a.startsOn ?? '').localeCompare(b.startsOn ?? '') || a.title.localeCompare(b.title));
+  return [...events, ...posts.filter((p) => !ahead(p))].slice(0, limit);
 }

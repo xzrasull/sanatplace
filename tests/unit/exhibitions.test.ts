@@ -7,7 +7,7 @@ import { workRatio } from '../../src/lib/exhibitions/wall-scale';
 import { hallIndex } from '../../src/lib/exhibitions/hall-data';
 import { roomLayout, type Hung, type RoomLayout } from '../../src/lib/exhibitions/room-layout';
 import { parseExhibitionForm, parseHallForm, parseWorkNote, isExhibitionErrorCode } from '../../src/lib/exhibitions/exhibition-form';
-import { exhibitionAsCard, mergeAfisha } from '../../src/lib/journal/afisha';
+import { exhibitionAsCard, homeAfisha, mergeAfisha } from '../../src/lib/journal/afisha';
 import { todayInDushanbe } from '../../src/lib/journal/post-form';
 
 const form = (fields: Record<string, string>) => {
@@ -233,5 +233,14 @@ describe('online exhibitions in the journal', () => {
     expect(mergeAfisha(posts, shows, '2026-11-10', 12).map((c) => c.id)).toEqual(['new', 'e1', 'old']);
     expect(mergeAfisha(posts, shows, '2026-11-10', 2).map((c) => c.id)).toEqual(['new', 'e1']);
     expect(mergeAfisha(posts, [], '2026-11-10', 12)).toBe(posts);
+  });
+
+  it('on the home page stands with the events still ahead, soonest first; a closed one is left out', () => {
+    const event = { ...post('event', '2026-10-01'), category: 'event' as const, startsOn: '2026-11-20' };
+    const posts = [event, post('news', '2026-11-05')];
+    const open = { ...show, startsOn: '2026-11-01', endsOn: '2026-11-30' };
+    const closed = { ...show, id: 'e0', startsOn: '2026-09-01', endsOn: '2026-09-30' };
+    expect(homeAfisha(posts, [open, closed], '2026-11-10', 3).map((c) => c.id)).toEqual(['e1', 'event', 'news']);
+    expect(homeAfisha(posts, [open], '2026-11-10', 2).map((c) => c.id)).toEqual(['e1', 'event']);
   });
 });

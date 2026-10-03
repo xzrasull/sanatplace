@@ -20,7 +20,6 @@ import {
 } from '../../src/lib/exhibitions/admin';
 import {
   getExhibitionPreview,
-  getOpenExhibitionForHome,
   getPublicExhibition,
   listOpenExhibitionsWithArtwork,
   listAfishaExhibitions,
@@ -222,12 +221,11 @@ describe('exhibition public queries', () => {
     expect((await getPublicExhibition(getDb(), `${PREFIX}q-view`, today))?.halls).toEqual([]);
   });
 
-  it('finds the open exhibition for the home page and for an artwork', async () => {
+  it('finds the open exhibitions an artwork is on', async () => {
     const ex = await exhibition('q-home', { status: 'published', startsOn: '2090-06-10', endsOn: '2090-06-20' });
     const h = await hall(ex, 'Зал');
     const a = await artwork('q-home-a');
     await addWork(getDb(), h, a);
-    expect((await getOpenExhibitionForHome(getDb(), today))?.slug).toBeDefined();
     expect(await listOpenExhibitionsWithArtwork(getDb(), a, today)).toEqual([{ slug: `${PREFIX}q-home`, title: 'Тест' }]);
     expect(await listOpenExhibitionsWithArtwork(getDb(), a, '2090-06-21')).toEqual([]);
   });
