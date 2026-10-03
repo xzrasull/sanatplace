@@ -2,10 +2,12 @@
 
 import { getCurrentUser } from '@/src/lib/auth/session';
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 import { getDb } from '@/src/db';
 import { createSellerApplication } from '@/src/lib/sellers/applications';
 import { parseSellerProfileForm } from '@/src/lib/sellers/profile-form';
 import { hasSellerConsent } from '@/src/lib/legal';
+import { notifyAdminsOfApplication } from '@/src/lib/telegram-bot/notify';
 
 export async function submitSellerApplication(formData: FormData) {
   const user = await getCurrentUser();
@@ -18,6 +20,7 @@ export async function submitSellerApplication(formData: FormData) {
   if (!profile) redirect('/become-seller?error=invalid');
 
   await createSellerApplication(getDb(), { userId: user.id, ...profile });
+  after(() => notifyAdminsOfApplication(getDb(), user.id));
 
   redirect('/become-seller/status');
 }

@@ -4,9 +4,14 @@ import type { Db } from '../../src/db';
 const callTelegram = vi.fn();
 vi.mock('../../src/lib/telegram-bot/api', () => ({ callTelegram: (...args: unknown[]) => callTelegram(...args) }));
 
-const { notifyArtworkApproved, notifyArtworkRejected, notifySellerApproved, notifySellerRejected } = await import(
-  '../../src/lib/telegram-bot/notify'
-);
+const {
+  notifyAdminsOfApplication,
+  notifyAdminsOfArtwork,
+  notifyArtworkApproved,
+  notifyArtworkRejected,
+  notifySellerApproved,
+  notifySellerRejected,
+} = await import('../../src/lib/telegram-bot/notify');
 
 // A stand-in for drizzle: each select().from().where() answers with the next
 // prepared rows, in order.
@@ -92,5 +97,54 @@ describe('telegram approval messages', () => {
     await notifySellerApproved(fakeDb([]), 'nope');
     await notifyArtworkApproved(fakeDb([]), 'nope');
     expect(callTelegram).not.toHaveBeenCalled();
+  });
+});
+
+describe('telegram messages to the admins', () => {
+  beforeEach(() => {
+    callTelegram.mockReset();
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://sanatplace.example');
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('tells every admin about a new seller application, with a button to the queue', async () => {
+    const db = fakeDb([{ displayName: 'Студия Сафар' }], [{ telegramId: 7 }, { telegramId: 8 }]);
+    await notifyAdminsOfApplication(db, 'u1');
+    expect(callTelegram.mock.calls.map(([, body]) => body.chat_id)).toEqual([7, 8]);
+    const body = callTelegram.mock.calls[0][1];
+    expect(body.text).toBe('🆕 Новая заявка художника: Студия Сафар.');
+    expect(body.reply_markup.inline_keyboard[0][0]).toEqual({
+      text: 'Открыть заявки',
+      url: 'https://sanatplace.example/admin/sellers',
+    });
+  });
+
+  it('tells the admins about a new artwork, with its title and artist', async () => {
+    const db = fakeDb([{ sellerId: 'u1', title: 'Закат' }], [{ displayName: 'Студия Сафар' }], [{ telegramId: 7 }]);
+    await notifyAdminsOfArtwork(db, 'art1');
+    const body = callTelegram.mock.calls[0][1];
+    expect(body.text).toBe('🖼 Новая картина на проверку: «Закат» — Студия Сафар.');
+    expect(body.reply_markup.inline_keyboard[0][0].url).toBe('https://sanatplace.example/admin/artworks');
+  });
+
+  it('says so when the artwork was edited and is on review again', async () => {
+    const db = fakeDb([{ sellerId: 'u1', title: 'Закат' }], [{ displayName: 'Студия Сафар' }], [{ telegramId: 7 }]);
+    await notifyAdminsOfArtwork(db, 'art1', true);
+    expect(callTelegram.mock.calls[0][1].text).toContain('Картина изменена и снова ждёт проверки: «Закат»');
+  });
+
+  it('sends nothing when nobody has the admin role', async () => {
+    await notifyAdminsOfApplication(fakeDb([{ displayName: 'R' }], []), 'u1');
+    expect(callTelegram).not.toHaveBeenCalled();
+  });
+
+  it('still reaches the other admins when one of them blocked the bot, and does not throw', async () => {
+    callTelegram.mockRejectedValueOnce(new Error('Forbidden: bot was blocked by the user'));
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const db = fakeDb([{ displayName: 'R' }], [{ telegramId: 7 }, { telegramId: 8 }]);
+    await expect(notifyAdminsOfApplication(db, 'u1')).resolves.toBeUndefined();
+    expect(callTelegram).toHaveBeenCalledTimes(2);
+    expect(log).toHaveBeenCalled();
+    log.mockRestore();
   });
 });
