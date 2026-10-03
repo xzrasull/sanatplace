@@ -73,7 +73,11 @@ export function InstantFeedback() {
     window.addEventListener('submit', onSubmit);
     window.addEventListener('pageshow', onPageShow);
     window.addEventListener(START_EVENT, start);
+    // This component comes alive a little after the links do (it waits in a
+    // Suspense). The mark tells the tests that presses are answered from now on.
+    document.documentElement.dataset.instantFeedback = '';
     return () => {
+      delete document.documentElement.dataset.instantFeedback;
       document.removeEventListener('click', onClick);
       document.removeEventListener('submit', onSubmitCapture, true);
       window.removeEventListener('submit', onSubmit);
