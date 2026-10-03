@@ -910,6 +910,10 @@
   .rail::-webkit-scrollbar {
     display: none;
   }
+  /* a swipe down the page is under way (rail.tsx): the strip stays put */
+  .rail.held {
+    overflow-x: hidden;
+  }
   .rail > * {
     flex: none;
     scroll-snap-align: start;
