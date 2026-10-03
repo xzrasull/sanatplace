@@ -4,8 +4,9 @@ import { listHallsForAdmin, searchArtworkChoices } from '@/src/lib/exhibitions/a
 import { EXHIBITION_LIMITS, MAX_HALLS, WALL_COLORS } from '@/src/lib/exhibitions/exhibition-form';
 import { VISIBLE_STATUSES } from '@/src/lib/exhibitions/status';
 import { ConfirmDelete } from '@/src/components/admin/confirm-delete';
-import { Field } from '@/src/components/form/field';
+import { Field, FIELD_CLASS } from '@/src/components/form/field';
 import { SubmitButton } from '@/src/components/form/submit-button';
+import { CustomSelect } from '@/src/components/sanat/custom-select';
 import { Input } from '@/src/components/ui/input';
 import { Textarea } from '@/src/components/ui/textarea';
 import {
@@ -19,7 +20,10 @@ import {
   updateHallAction,
 } from '../actions';
 
-const COLOR_OPTIONS = [['', 'Фон страницы'], ...Object.entries(WALL_COLORS).map(([k, v]) => [k, v.label])] as const;
+const COLOR_OPTIONS = [
+  { value: '', label: 'Фон страницы' },
+  ...Object.entries(WALL_COLORS).map(([value, color]) => ({ value, label: color.label })),
+];
 
 function HallFields({ title, intro, wallColor }: { title?: string; intro?: string | null; wallColor?: string | null }) {
   return (
@@ -30,15 +34,7 @@ function HallFields({ title, intro, wallColor }: { title?: string; intro?: strin
       <Field label="Текст зала">
         <Textarea name="intro" rows={3} maxLength={EXHIBITION_LIMITS.hallIntro} defaultValue={intro ?? ''} />
       </Field>
-      <Field label="Цвет стены">
-        <select name="wallColor" defaultValue={wallColor ?? ''} className="h-11 rounded-sm border border-border bg-card px-3">
-          {COLOR_OPTIONS.map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <CustomSelect className={FIELD_CLASS} name="wallColor" label="Цвет стены" options={COLOR_OPTIONS} defaultValue={wallColor ?? ''} />
     </>
   );
 }
