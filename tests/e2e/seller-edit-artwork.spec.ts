@@ -43,7 +43,8 @@ test('replacing the photo deletes the old file from storage', async ({ page }) =
     const [row] = await getDb().select().from(artworks).where(eq(artworks.id, artworkId));
     expect(row.imageUrl).not.toBe(before.url);
     expect((await fetch(row.imageUrl)).ok).toBe(true);
-    expect((await fetch(before.url)).ok).toBe(false);
+    // the CDN keeps serving the plain address for an hour; a query string reaches the storage itself
+    expect((await fetch(`${before.url}?deleted`)).ok).toBe(false);
   } finally {
     const rows = await getDb().select({ url: artworks.imageUrl }).from(artworks).where(eq(artworks.sellerId, seller.id));
     await deleteArtworkImages([before.url, ...rows.map((r) => r.url)]);

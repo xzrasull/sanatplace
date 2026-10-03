@@ -65,8 +65,10 @@ test('artist page and artwork page render for a published artwork, and a pending
     await expect(forSale.getByText(/Ожидающая картина/)).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Уже проданы' })).toHaveCount(0);
 
-    const pendingResponse = await page.goto(`/gallery/artwork/${pendingId}`);
-    expect(pendingResponse?.status()).toBe(404);
+    // the status stays 200 because the page streams; the content is the 404
+    const pending = await (await page.request.get(`/gallery/artwork/${pendingId}`)).text();
+    expect(pending).toContain('Страница не найдена');
+    expect(pending).not.toContain('Ожидающая картина');
   } finally {
     await getDb().delete(artworks).where(eq(artworks.sellerId, seller.id));
     await getDb().delete(sellerApplications).where(eq(sellerApplications.userId, seller.id));

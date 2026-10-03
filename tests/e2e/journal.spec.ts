@@ -26,14 +26,14 @@ test('the admin writes an event as a draft, publishes it, and it shows on the si
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
+    // a new post starts on «Событие», so two steps down is «Новость»
+    await expect(rubric).toContainText('Новость');
+    await expect(page.getByLabel('Дата начала')).toHaveCount(0);
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Enter');
     await expect(rubric).toContainText('Событие');
     await expect(page.getByLabel('Дата начала')).toBeVisible();
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-    await expect(rubric).not.toContainText('Событие');
-    await expect(page.getByLabel('Дата начала')).toHaveCount(0);
-    await pick(page, 'Рубрика', 'Событие');
     await page.getByLabel('Заголовок', { exact: true }).fill(title);
     await page.getByLabel('Адрес страницы').fill(slug);
     await page.getByLabel(/Короткое описание/).fill('Три часа с кистью.');
