@@ -1,7 +1,8 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { Db } from '../../db';
 import { artworks, sellerApplications, users } from '../../db/schema';
 import { BRAND_NAME } from '../brand';
+import { adminTelegramLink } from '../journal/contact';
 import { siteUrl } from '../site-url';
 import { callTelegram } from './api';
 
@@ -92,25 +93,25 @@ export async function notifyArtworkRejected(db: Db, artworkId: string) {
   );
 }
 
-// Messages to the admins when there is something to review: a seller
-// application or an artwork. They go to every user with the admin role
-// (scripts/promote-to-admin.ts); such a user signed in through the bot, so it
-// may write to them. Best effort, like the messages above.
+// Messages to the admin when there is something to review: a seller
+// application or an artwork. The admin is the site's Telegram contact (see
+// adminTelegramLink). The bot can only write to a numeric id, which it knows
+// once that account has signed in on the site; until then nothing is sent.
+// Best effort, like the messages above.
 
-async function sendToAdmins(db: Db, text: string, button: { text: string; path: string }) {
-  const admins = await db.select({ telegramId: users.telegramId }).from(users).where(eq(users.role, 'admin'));
+async function sendToAdmin(db: Db, text: string, button: { text: string; path: string }) {
+  const username = adminTelegramLink()?.replace('https://t.me/', '').toLowerCase();
+  if (!username) return;
+  // Telegram usernames ignore case
+  const [admin] = await db.select({ telegramId: users.telegramId }).from(users).where(eq(sql`lower(${users.username})`, username));
+  if (!admin) return;
   const url = `${siteUrl()}${button.path}`;
-  const results = await Promise.allSettled(
-    admins.map((admin) =>
-      callTelegram('sendMessage', {
-        chat_id: admin.telegramId,
-        text,
-        link_preview_options: { is_disabled: true },
-        ...(url.startsWith('https://') && { reply_markup: { inline_keyboard: [[{ text: button.text, url }]] } }),
-      }),
-    ),
-  );
-  for (const r of results) if (r.status === 'rejected') console.error('telegram notify failed', r.reason);
+  await callTelegram('sendMessage', {
+    chat_id: admin.telegramId,
+    text,
+    link_preview_options: { is_disabled: true },
+    ...(url.startsWith('https://') && { reply_markup: { inline_keyboard: [[{ text: button.text, url }]] } }),
+  });
 }
 
 async function artistName(db: Db, userId: string): Promise<string | undefined> {
@@ -121,18 +122,18 @@ async function artistName(db: Db, userId: string): Promise<string | undefined> {
   return application?.displayName;
 }
 
-export async function notifyAdminsOfApplication(db: Db, userId: string) {
+export async function notifyAdminOfApplication(db: Db, userId: string) {
   try {
     const name = await artistName(db, userId);
     if (!name) return;
-    await sendToAdmins(db, `🆕 Новая заявка художника: ${name}.`, { text: 'Открыть заявки', path: '/admin/sellers' });
+    await sendToAdmin(db, `🆕 Новая заявка художника: ${name}.`, { text: 'Открыть заявки', path: '/admin/sellers' });
   } catch (e) {
     console.error('telegram notify failed', e);
   }
 }
 
 // `edited`: the artist changed a work that was already there, so it is on review again.
-export async function notifyAdminsOfArtwork(db: Db, artworkId: string, edited = false) {
+export async function notifyAdminOfArtwork(db: Db, artworkId: string, edited = false) {
   try {
     const [artwork] = await db
       .select({ sellerId: artworks.sellerId, title: artworks.title })
@@ -140,7 +141,7 @@ export async function notifyAdminsOfArtwork(db: Db, artworkId: string, edited = 
       .where(eq(artworks.id, artworkId));
     if (!artwork) return;
     const name = await artistName(db, artwork.sellerId);
-    await sendToAdmins(
+    await sendToAdmin(
       db,
       `${edited ? '✏️ Картина изменена и снова ждёт проверки' : '🖼 Новая картина на проверку'}: «${artwork.title}»${name ? ` — ${name}` : ''}.`,
       { text: 'Открыть проверку картин', path: '/admin/artworks' },

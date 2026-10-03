@@ -5,8 +5,8 @@ const callTelegram = vi.fn();
 vi.mock('../../src/lib/telegram-bot/api', () => ({ callTelegram: (...args: unknown[]) => callTelegram(...args) }));
 
 const {
-  notifyAdminsOfApplication,
-  notifyAdminsOfArtwork,
+  notifyAdminOfApplication,
+  notifyAdminOfArtwork,
   notifyArtworkApproved,
   notifyArtworkRejected,
   notifySellerApproved,
@@ -100,18 +100,19 @@ describe('telegram approval messages', () => {
   });
 });
 
-describe('telegram messages to the admins', () => {
+describe('telegram messages to the admin', () => {
   beforeEach(() => {
     callTelegram.mockReset();
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://sanatplace.example');
   });
   afterEach(() => vi.unstubAllEnvs());
 
-  it('tells every admin about a new seller application, with a button to the queue', async () => {
-    const db = fakeDb([{ displayName: 'Студия Сафар' }], [{ telegramId: 7 }, { telegramId: 8 }]);
-    await notifyAdminsOfApplication(db, 'u1');
-    expect(callTelegram.mock.calls.map(([, body]) => body.chat_id)).toEqual([7, 8]);
+  it('tells the admin about a new seller application, with a button to the queue', async () => {
+    const db = fakeDb([{ displayName: 'Студия Сафар' }], [{ telegramId: 7 }]);
+    await notifyAdminOfApplication(db, 'u1');
+    expect(callTelegram).toHaveBeenCalledOnce();
     const body = callTelegram.mock.calls[0][1];
+    expect(body.chat_id).toBe(7);
     expect(body.text).toBe('🆕 Новая заявка художника: Студия Сафар.');
     expect(body.reply_markup.inline_keyboard[0][0]).toEqual({
       text: 'Открыть заявки',
@@ -119,9 +120,9 @@ describe('telegram messages to the admins', () => {
     });
   });
 
-  it('tells the admins about a new artwork, with its title and artist', async () => {
+  it('tells the admin about a new artwork, with its title and artist', async () => {
     const db = fakeDb([{ sellerId: 'u1', title: 'Закат' }], [{ displayName: 'Студия Сафар' }], [{ telegramId: 7 }]);
-    await notifyAdminsOfArtwork(db, 'art1');
+    await notifyAdminOfArtwork(db, 'art1');
     const body = callTelegram.mock.calls[0][1];
     expect(body.text).toBe('🖼 Новая картина на проверку: «Закат» — Студия Сафар.');
     expect(body.reply_markup.inline_keyboard[0][0].url).toBe('https://sanatplace.example/admin/artworks');
@@ -129,21 +130,19 @@ describe('telegram messages to the admins', () => {
 
   it('says so when the artwork was edited and is on review again', async () => {
     const db = fakeDb([{ sellerId: 'u1', title: 'Закат' }], [{ displayName: 'Студия Сафар' }], [{ telegramId: 7 }]);
-    await notifyAdminsOfArtwork(db, 'art1', true);
+    await notifyAdminOfArtwork(db, 'art1', true);
     expect(callTelegram.mock.calls[0][1].text).toContain('Картина изменена и снова ждёт проверки: «Закат»');
   });
 
-  it('sends nothing when nobody has the admin role', async () => {
-    await notifyAdminsOfApplication(fakeDb([{ displayName: 'R' }], []), 'u1');
+  it('sends nothing while the admin account has not signed in on the site', async () => {
+    await notifyAdminOfApplication(fakeDb([{ displayName: 'R' }], []), 'u1');
     expect(callTelegram).not.toHaveBeenCalled();
   });
 
-  it('still reaches the other admins when one of them blocked the bot, and does not throw', async () => {
-    callTelegram.mockRejectedValueOnce(new Error('Forbidden: bot was blocked by the user'));
+  it('does not throw when Telegram fails', async () => {
+    callTelegram.mockRejectedValue(new Error('Forbidden: bot was blocked by the user'));
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const db = fakeDb([{ displayName: 'R' }], [{ telegramId: 7 }, { telegramId: 8 }]);
-    await expect(notifyAdminsOfApplication(db, 'u1')).resolves.toBeUndefined();
-    expect(callTelegram).toHaveBeenCalledTimes(2);
+    await expect(notifyAdminOfApplication(fakeDb([{ displayName: 'R' }], [{ telegramId: 7 }]), 'u1')).resolves.toBeUndefined();
     expect(log).toHaveBeenCalled();
     log.mockRestore();
   });

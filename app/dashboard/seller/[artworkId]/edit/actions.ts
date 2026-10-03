@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/src/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { after } from 'next/server';
 import { getDb } from '@/src/db';
-import { notifyAdminsOfArtwork } from '@/src/lib/telegram-bot/notify';
+import { notifyAdminOfArtwork } from '@/src/lib/telegram-bot/notify';
 import { getArtworkForOwner, updateArtwork } from '@/src/lib/artworks/seller-operations';
 import { dropArtworkImages, tryUploadArtworkImage } from '@/src/lib/uploads/upload-image';
 import { parseYear } from '@/src/lib/artworks/year';
@@ -75,7 +75,7 @@ export async function submitEditArtwork(artworkId: string, formData: FormData) {
   }
   // Only once the row points at the new photo is the old file removed.
   if (replaced) await dropArtworkImages([existing.imageUrl]);
-  after(() => notifyAdminsOfArtwork(getDb(), artworkId, true));
+  after(() => notifyAdminOfArtwork(getDb(), artworkId, true));
 
   redirect('/dashboard/seller');
 }
