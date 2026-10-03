@@ -26,13 +26,13 @@ import { dropImages, tryUploadImage } from '@/src/lib/uploads/upload-image';
 
 const COVER_SIDE = 1600;
 
-// The lists, the home page block, the journal and the exhibition's own page
+// The journal's lists, the home page block and the exhibition's own page
 // (under its old address too, when it moved). Not exported: every export of a
 // 'use server' file becomes a callable action.
 function exhibitionsChanged(...slugs: (string | null | undefined)[]) {
   revalidateTag('exhibitions');
-  revalidatePath('/admin/exhibitions');
-  revalidatePath('/exhibitions');
+  revalidatePath('/admin/journal');
+  revalidatePath('/journal');
   revalidatePath('/');
   for (const slug of new Set(slugs)) if (slug) revalidatePath(`/exhibitions/${slug}`);
 }
@@ -90,7 +90,7 @@ export async function removeExhibition(formData: FormData) {
   const gone = await deleteExhibition(getDb(), id);
   if (gone) await dropImages(POSTS_BUCKET, [gone.coverUrl]);
   exhibitionsChanged(gone?.slug);
-  redirect('/admin/exhibitions');
+  redirect('/admin/journal');
 }
 
 const idOf = (form: FormData, key: string) => {
@@ -101,7 +101,7 @@ const dirOf = (form: FormData): -1 | 1 => (form.get('dir') === 'up' ? -1 : 1);
 
 // Back to the exhibition's page, with a problem in the address if there was one.
 async function backTo(exhibitionId: string | undefined | null, error?: ExhibitionErrorCode): Promise<never> {
-  if (!exhibitionId) redirect('/admin/exhibitions?error=not_found');
+  if (!exhibitionId) redirect('/admin/journal?error=not_found');
   const ex = await getExhibition(getDb(), exhibitionId);
   exhibitionsChanged(ex?.slug);
   redirect(`/admin/exhibitions/${exhibitionId}${error ? `?error=${error}` : ''}#halls`);

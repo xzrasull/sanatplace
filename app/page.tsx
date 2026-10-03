@@ -102,7 +102,7 @@ export default async function HomePage() {
           <section className="sec" aria-labelledby="home-ex-t">
             <div className="sec-head">
               <h2 id="home-ex-t">Сейчас на выставке</h2>
-              <Link className="more" href="/exhibitions">
+              <Link className="more" href="/journal?c=exhibition">
                 Все выставки
               </Link>
             </div>

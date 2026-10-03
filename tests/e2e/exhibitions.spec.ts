@@ -71,7 +71,9 @@ test('the admin builds an exhibition and a visitor walks through it', async ({ p
   const cover = await sharp({ create: { width: 1600, height: 900, channels: 3, background: '#617f6c' } }).jpeg().toBuffer();
 
   await signInAsStaff(page, 'admin');
-  await page.goto('/admin/exhibitions/new');
+  await page.goto('/admin/journal');
+  await page.getByRole('link', { name: 'Добавить выставку' }).click();
+  await page.getByRole('link', { name: /^Онлайн/ }).click();
   await page.getByLabel('Название', { exact: true }).fill(title);
   await page.getByLabel('Адрес страницы').fill(slug);
   await page.getByLabel('Дата открытия').fill(inDays(0));
@@ -111,7 +113,7 @@ test('the admin builds an exhibition and a visitor walks through it', async ({ p
 
   // the visitor
   await page.context().clearCookies();
-  await page.goto('/exhibitions');
+  await page.goto('/journal?c=exhibition');
   await page.getByRole('link', { name: new RegExp(title) }).click();
   await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Вершины' })).toBeVisible();
@@ -181,7 +183,7 @@ test('a closed exhibition stays open to visitors with a notice; an upcoming one 
   await expect(page.getByRole('img', { name: /Зал 1 «Архив» в 3D/ })).toBeVisible({ timeout: 20000 });
   await expect(page.getByRole('link', { name: new RegExp(`Подробнее: ${works[0].title}`) })).toHaveCount(1);
 
-  await page.goto('/exhibitions');
+  await page.goto('/journal?c=exhibition');
   await expect(page.getByText(`E2E Будущая ${stamp}`)).toBeVisible();
   await expect(page.getByRole('link', { name: new RegExp(`E2E Будущая ${stamp}`) })).toHaveCount(0);
   await page.goto(`/exhibitions/${soon.slug}`);

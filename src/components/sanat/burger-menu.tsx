@@ -16,8 +16,7 @@ const ITEMS: Item[] = [
   { href: '/', label: 'Главная', current: (p) => p === '/' },
   { href: '/gallery', label: 'Каталог', current: (p) => p === '/gallery' || p.startsWith('/gallery/artwork/') },
   { href: '/artists', label: 'Художники', current: (p) => under('/artists')(p) || p.startsWith('/gallery/artist/') },
-  { href: '/exhibitions', label: 'Выставки', current: under('/exhibitions') },
-  { href: '/journal', label: 'Афиша', current: under('/journal') },
+  { href: '/journal', label: 'Афиша', current: (p) => under('/journal')(p) || under('/exhibitions')(p) },
   { href: '/favorites', label: 'Wishlist', current: under('/favorites'), wish: true },
 ];
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { startTransition, useActionState, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import Link from 'next/link';
 import { Field, FIELD_CLASS } from '@/src/components/form/field';
 import { CustomSelect } from '@/src/components/sanat/custom-select';
 import { MarkdownBody } from '@/src/components/journal/markdown-body';
@@ -74,10 +75,13 @@ function applyTool(area: HTMLTextAreaElement, tool: Tool) {
 export function PostForm({
   action,
   post,
+  category: initialCategory = 'event',
   artists,
 }: {
   action: (prev: State, formData: FormData) => Promise<State>;
   post?: Post;
+  // a new post's rubric
+  category?: PostCategory;
   artists: { id: string; name: string }[];
 }) {
   const form = useRef<HTMLFormElement>(null);
@@ -86,7 +90,7 @@ export function PostForm({
   const original = useRef<File | null>(null);
   const [state, dispatch, pending] = useActionState(action, null);
   const [dirty, setDirty] = useState(false);
-  const [category, setCategory] = useState<PostCategory>(post?.category ?? 'exhibition');
+  const [category, setCategory] = useState<PostCategory>(post?.category ?? initialCategory);
   const [slug, setSlug] = useState(post?.slug ?? '');
   // a new post's address follows the title until the admin edits it
   const [slugTouched, setSlugTouched] = useState(Boolean(post));
@@ -208,6 +212,15 @@ export function PostForm({
           onChange={(v) => setCategory(v as PostCategory)}
           required
         />
+        {category === 'exhibition' && (
+          <p className="text-sm text-muted-foreground">
+            Это офлайн-выставка: анонс с датами и местом. Онлайн-выставка с залами{' '}
+            <Link className="underline hover:text-brand" href="/admin/exhibitions/new">
+              создаётся отдельно
+            </Link>
+            .
+          </p>
+        )}
 
         <Field label="Заголовок">
           <Input

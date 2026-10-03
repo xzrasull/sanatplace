@@ -37,8 +37,8 @@ export default async function EditExhibitionPage({
   return (
     <main>
       <AdminNav role={role} />
-      <Link href="/admin/exhibitions" className="text-sm text-muted-foreground hover:text-brand">
-        ← Все выставки
+      <Link href="/admin/journal" className="text-sm text-muted-foreground hover:text-brand">
+        ← Афиша и журнал
       </Link>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
         <div>

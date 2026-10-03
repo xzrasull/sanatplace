@@ -23,7 +23,7 @@ import {
   getOpenExhibitionForHome,
   getPublicExhibition,
   listOpenExhibitionsWithArtwork,
-  listPublishedExhibitions,
+  listAfishaExhibitions,
 } from '../../src/lib/exhibitions/queries';
 
 const PREFIX = 'test-ex-';
@@ -194,8 +194,8 @@ describe('exhibition public queries', () => {
     // the admin's preview sees drafts
     expect((await getExhibitionPreview(getDb(), draft))?.exhibition.id).toBe(draft);
 
-    // the list has upcoming ones (for «Скоро»), never drafts
-    const slugs = (await listPublishedExhibitions(getDb())).map((e) => e.slug);
+    // the journal has upcoming ones (as «Скоро»), never drafts
+    const slugs = (await listAfishaExhibitions(getDb())).map((e) => e.slug);
     expect(slugs).toContain(`${PREFIX}q-soon`);
     expect(slugs).not.toContain(`${PREFIX}q-draft`);
   });

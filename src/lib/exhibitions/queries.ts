@@ -1,7 +1,7 @@
 // src/lib/exhibitions/queries.ts
-import { and, asc, desc, eq, gte, inArray, lte, ne, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lte, ne, type SQL } from 'drizzle-orm';
 import type { Db } from '../../db';
-import { artworks, exhibitionHalls, exhibitionWorks, exhibitions, sellerApplications, techniques, users } from '../../db/schema';
+import { artworks, exhibitionHalls, exhibitionWorks, exhibitions, posts, sellerApplications, techniques, users } from '../../db/schema';
 import { ARTIST_AVATAR } from '../artworks/public-queries';
 import { VISIBLE_STATUSES } from './status';
 
@@ -134,9 +134,15 @@ export const getPublicExhibition = (db: Db, slug: string, today: string) =>
 // Any status: the admin's preview.
 export const getExhibitionPreview = (db: Db, id: string) => loadView(db, eq(exhibitions.id, id));
 
-// Every published one, upcoming too (the list's «Скоро»), newest first.
-export async function listPublishedExhibitions(db: Db): Promise<ExhibitionCard[]> {
-  return db.select(CARD).from(exhibitions).where(published).orderBy(desc(exhibitions.startsOn), asc(exhibitions.title));
+// The journal's cards: every published one, upcoming too, newest first. One
+// with a live announcement is left to that post, which links to it.
+export async function listAfishaExhibitions(db: Db, now = new Date()): Promise<ExhibitionCard[]> {
+  return db
+    .select(CARD)
+    .from(exhibitions)
+    .leftJoin(posts, and(eq(posts.id, exhibitions.postId), eq(posts.status, 'published'), lte(posts.publishedAt, now)))
+    .where(and(published, isNull(posts.id)))
+    .orderBy(desc(exhibitions.startsOn), asc(exhibitions.title));
 }
 
 export async function getOpenExhibitionForHome(db: Db, today: string): Promise<ExhibitionCard | undefined> {

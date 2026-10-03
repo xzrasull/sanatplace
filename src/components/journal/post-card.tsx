@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { CATEGORY_NAME, dateRange, isDated, isOver, publishedDate } from '@/src/lib/journal/post-form';
+import type { AfishaCard } from '@/src/lib/journal/afisha';
 import type { PostSummary } from '@/src/lib/journal/posts';
 import { isStorageUrl } from '@/src/lib/uploads/buckets';
 
@@ -33,26 +34,46 @@ export function PostCover({ post, sizes, priority, alt = '' }: { post: PostSumma
 }
 
 // A 4:3 cover with the rubric on it, then the date, title, short description
-// and place. Both the cover and the text open the post.
-export function PostCard({ post, today }: { post: PostSummary; today: string }) {
-  const href = `/journal/${post.slug}`;
+// and place. Both the cover and the text open the post; an online exhibition
+// opens its own page, and one that has not opened yet has no link.
+export function PostCard({ post, today }: { post: AfishaCard; today: string }) {
+  const href = post.href === undefined ? `/journal/${post.slug}` : post.href;
+  const thumb = (
+    <>
+      <PostCover post={post} sizes={POST_CARD_SIZES} />
+      <span className="ptag">{post.tag ?? CATEGORY_NAME[post.category]}</span>
+    </>
+  );
+  const meta = (
+    <>
+      <p className="pdate">{post.when ?? postWhen(post, today)}</p>
+      <h3>{post.title}</h3>
+      {post.excerpt && <p className="pex">{post.excerpt}</p>}
+      {post.place && <p className="pplace">{post.place}</p>}
+    </>
+  );
   return (
     <article className="pcard">
-      <Link className="pthumb" href={href} tabIndex={-1} aria-hidden="true">
-        <PostCover post={post} sizes={POST_CARD_SIZES} />
-        <span className="ptag">{CATEGORY_NAME[post.category]}</span>
-      </Link>
-      <Link className="pmeta" href={href}>
-        <p className="pdate">{postWhen(post, today)}</p>
-        <h3>{post.title}</h3>
-        {post.excerpt && <p className="pex">{post.excerpt}</p>}
-        {post.place && <p className="pplace">{post.place}</p>}
-      </Link>
+      {href ? (
+        <>
+          <Link className="pthumb" href={href} tabIndex={-1} aria-hidden="true">
+            {thumb}
+          </Link>
+          <Link className="pmeta" href={href}>
+            {meta}
+          </Link>
+        </>
+      ) : (
+        <>
+          <div className="pthumb">{thumb}</div>
+          <div className="pmeta">{meta}</div>
+        </>
+      )}
     </article>
   );
 }
 
-export function PostGrid({ posts, today }: { posts: PostSummary[]; today: string }) {
+export function PostGrid({ posts, today }: { posts: AfishaCard[]; today: string }) {
   return (
     <ul className="pgrid" role="list">
       {posts.map((p) => (

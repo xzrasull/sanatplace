@@ -14,8 +14,21 @@ const isUniqueViolation = (e: unknown): boolean =>
 
 // ---------- exhibitions ----------
 
-export async function listAllExhibitions(db: Db): Promise<Exhibition[]> {
-  return db.select().from(exhibitions).orderBy(desc(exhibitions.startsOn), desc(exhibitions.createdAt));
+// The journal list's filters: status and a search by title.
+export async function listAllExhibitions(
+  db: Db,
+  { status, q }: { status?: Exhibition['status']; q?: string } = {},
+): Promise<Exhibition[]> {
+  return db
+    .select()
+    .from(exhibitions)
+    .where(
+      and(
+        status ? eq(exhibitions.status, status) : undefined,
+        q ? ilike(exhibitions.title, `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`) : undefined,
+      ),
+    )
+    .orderBy(desc(exhibitions.startsOn), desc(exhibitions.createdAt));
 }
 
 export async function getExhibition(db: Db, id: string): Promise<Exhibition | undefined> {

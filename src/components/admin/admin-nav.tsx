@@ -10,7 +10,6 @@ const ADMIN_LINKS = [
   { href: '/admin/database', label: 'База данных' },
   { href: '/admin/banners', label: 'Баннеры' },
   { href: '/admin/journal', label: 'Афиша и журнал' },
-  { href: '/admin/exhibitions', label: 'Выставки' },
 ];
 const LINKS = [
   { href: '/admin/sellers', label: 'Заявки продавцов' },

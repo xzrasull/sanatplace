@@ -3,12 +3,14 @@ import { getDb } from '@/src/db';
 import { adminTelegramLink, PROPOSE_TEXT } from '@/src/lib/journal/contact';
 import { CATEGORY_TABS, isPostCategory, todayInDushanbe } from '@/src/lib/journal/post-form';
 import { getFeaturedPost, listPublishedPosts } from '@/src/lib/journal/posts';
+import { mergeAfisha } from '@/src/lib/journal/afisha';
+import { listAfishaExhibitions } from '@/src/lib/exhibitions/queries';
 import { pagePreview } from '@/src/lib/seo';
 import { PostFeatured } from '@/src/components/journal/post-featured';
 import { PostGrid } from '@/src/components/journal/post-card';
 
 const TITLE = 'Афиша и журнал';
-const DESCRIPTION = 'Выставки, мастер-классы, новости и статьи о том, что происходит вокруг искусства.';
+const DESCRIPTION = 'Выставки в городе и онлайн, мастер-классы, новости и статьи о том, что происходит вокруг искусства.';
 
 export const metadata = {
   title: TITLE,
@@ -19,7 +21,8 @@ export const metadata = {
 const PAGE_SIZE = 12;
 
 // Rubric chips (?c=), the featured post on top of "Все", then a grid of the
-// rest, newest first; "Показать ещё" adds twelve more (?page=).
+// rest, newest first; "Показать ещё" adds twelve more (?page=). Online
+// exhibitions stand among the posts, under "Все" and "Выставки".
 export default async function JournalPage({ searchParams }: { searchParams: Promise<{ c?: string; page?: string }> }) {
   const params = await searchParams;
   const category = isPostCategory(params.c) ? params.c : undefined;
@@ -27,11 +30,13 @@ export default async function JournalPage({ searchParams }: { searchParams: Prom
   const today = todayInDushanbe();
 
   const featured = category ? undefined : await getFeaturedPost(getDb());
-  const { items, total } = await listPublishedPosts(getDb(), {
-    category,
-    exceptId: featured?.id,
-    limit: PAGE_SIZE * page,
-  });
+  const limit = PAGE_SIZE * page;
+  const [found, shows] = await Promise.all([
+    listPublishedPosts(getDb(), { category, exceptId: featured?.id, limit }),
+    !category || category === 'exhibition' ? listAfishaExhibitions(getDb()) : [],
+  ]);
+  const items = mergeAfisha(found.items, shows, today, limit);
+  const total = found.total + shows.length;
   const hrefFor = (c: string, p?: number) => {
     const q = new URLSearchParams();
     if (c) q.set('c', c);

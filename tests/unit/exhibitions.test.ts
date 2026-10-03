@@ -7,6 +7,7 @@ import { workRatio } from '../../src/lib/exhibitions/wall-scale';
 import { hallIndex } from '../../src/lib/exhibitions/hall-data';
 import { roomLayout, type Hung, type RoomLayout } from '../../src/lib/exhibitions/room-layout';
 import { parseExhibitionForm, parseHallForm, parseWorkNote, isExhibitionErrorCode } from '../../src/lib/exhibitions/exhibition-form';
+import { exhibitionAsCard, mergeAfisha } from '../../src/lib/journal/afisha';
 import { todayInDushanbe } from '../../src/lib/journal/post-form';
 
 const form = (fields: Record<string, string>) => {
@@ -199,5 +200,38 @@ describe('roomLayout', () => {
 
   it('an empty hall is the smallest room', () => {
     expect(roomLayout([])).toMatchObject({ width: 10, depth: 7, works: [] });
+  });
+});
+
+describe('online exhibitions in the journal', () => {
+  const show = { id: 'e1', slug: 'gory', title: 'Горы', subtitle: 'Живопись', coverUrl: 'https://example.com/c.jpg', status: 'published' as const };
+  const post = (id: string, day: string) => ({
+    id,
+    slug: id,
+    category: 'news' as const,
+    title: id,
+    excerpt: null,
+    coverUrl: 'https://example.com/p.jpg',
+    startsOn: null,
+    endsOn: null,
+    place: null,
+    publishedAt: new Date(`${day}T10:00:00+05:00`),
+  });
+
+  it('an open one links to its page, an upcoming one has no link yet', () => {
+    const open = exhibitionAsCard({ ...show, startsOn: '2026-11-01', endsOn: '2026-11-30' }, '2026-11-10');
+    expect(open).toMatchObject({ href: '/exhibitions/gory', tag: 'Онлайн-выставка', category: 'exhibition', excerpt: 'Живопись' });
+    expect(open.when).toBeUndefined();
+    const soon = exhibitionAsCard({ ...show, startsOn: '2026-11-01', endsOn: '2026-11-30' }, '2026-10-20');
+    expect(soon.href).toBeNull();
+    expect(soon.when).toBe('Скоро · 1 – 30 ноября');
+  });
+
+  it('stands among the posts by its first day, within the limit', () => {
+    const posts = [post('new', '2026-11-05'), post('old', '2026-10-01')];
+    const shows = [{ ...show, startsOn: '2026-11-01', endsOn: '2026-11-30' }];
+    expect(mergeAfisha(posts, shows, '2026-11-10', 12).map((c) => c.id)).toEqual(['new', 'e1', 'old']);
+    expect(mergeAfisha(posts, shows, '2026-11-10', 2).map((c) => c.id)).toEqual(['new', 'e1']);
+    expect(mergeAfisha(posts, [], '2026-11-10', 12)).toBe(posts);
   });
 });

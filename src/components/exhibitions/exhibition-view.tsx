@@ -84,7 +84,7 @@ export function ExhibitionView({
           <section className="sec" aria-labelledby="ex-others-t">
             <div className="sec-head">
               <h2 id="ex-others-t">Другие выставки</h2>
-              <Link className="more" href="/exhibitions">
+              <Link className="more" href="/journal?c=exhibition">
                 Все выставки
               </Link>
             </div>
