@@ -7,8 +7,9 @@ export default defineConfig({
   // tsconfig leaves JSX to Next ("preserve"); tests that render components need it compiled
   oxc: { jsx: { runtime: 'automatic' } },
   test: {
-    // Each Neon HTTP query takes ~200 ms (the first ~750 ms), so DB tests can
-    // exceed vitest's 5 s default on a cold start.
+    globalSetup: './tests/global-setup.ts',
+    // Each query to the remote database takes a while (the first one longest),
+    // so DB tests can exceed vitest's 5 s default on a cold start.
     testTimeout: 30000,
     hookTimeout: 30000,
     exclude: ['**/node_modules/**', '**/tests/e2e/**'],

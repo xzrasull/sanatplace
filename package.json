@@ -8,8 +8,9 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "test:unit": "dotenv -e .env.local -- vitest run",
-    "test:e2e": "dotenv -e .env.local -- playwright test",
+    "test:unit": "dotenv -e .env.test -e .env.local -- vitest run",
+    "test:e2e": "dotenv -e .env.test -e .env.local -- playwright test",
+    "test:db:setup": "dotenv -e .env.test -e .env.local -- tsx scripts/setup-test-db.ts",
     "db:push": "dotenv -e .env.local -- drizzle-kit push"
   },
   "dependencies": {
